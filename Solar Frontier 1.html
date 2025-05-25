@@ -474,24 +474,13 @@
                 rotationSpeed: 0.0015
             },
             {
-                name: "Lagrange Survey Post L5 (Earth-Moon L5)",
-                type: "TRUSS_SPINDLE",
-                orbitsBody: "Earth", 
-                customOrbit: { parentPlanetName: "Earth", moonName: "Moon", lagrangePoint: "L5"},
-                orbitalRadius: 0, 
-                orbitalPeriodDays: 27.3, 
-                visualSize: 0.6,
-                color: 0xDAA520, 
-                rotationSpeed: 0.001
-            },
-            {
                 name: "Kuiper Gateway (Deep Space)",
                 type: "SKELETAL_FRAME",
-                orbitsBody: "Sun", 
-                orbitalRadiusAU: 55, 
-                orbitalPeriodYears: 400, 
+                orbitsBody: "Sun",
+                orbitalRadiusAU: 55,
+                orbitalPeriodYears: 400,
                 visualSize: 1.5,
-                color: 0x778899, 
+                color: 0x778899,
                 orbitalInclinationDegrees: 5.0
             }
         ];
@@ -1407,51 +1396,31 @@
                             }
                         }
                     }
-                } else if (sData.inAsteroidBelt) { 
-                    parentObjectMesh = sun; 
+                } else if (sData.inAsteroidBelt) {
+                    parentObjectMesh = sun;
                     const beltInfo = asteroidBeltsData.find(b => b.name === sData.inAsteroidBelt);
                     if (beltInfo) {
                         sData.orbitalRadius = (beltInfo.minRadiusAU + Math.random() * (beltInfo.maxRadiusAU - beltInfo.minRadiusAU)) * DISTANCE_SCALE_AU_TO_THREEJS;
                     } else {
-                         sData.orbitalRadius = 40 * DISTANCE_SCALE_AU_TO_THREEJS; 
-                    }
-                } else if (sData.customOrbit && sData.customOrbit.lagrangePoint === "L5") {
-                    const primaryBody = planets.find(p => p.mesh.userData.name === sData.customOrbit.parentPlanetName);
-                    const secondaryBodyPlanet = planetsData.find(pd => pd.name === sData.customOrbit.parentPlanetName); // Find planet data
-                    const secondaryMoonData = secondaryBodyPlanet ? secondaryBodyPlanet.moons.find(m => m.name === sData.customOrbit.moonName) : null;
-                    const secondaryBodyObj = primaryBody ? primaryBody.moonObjects.find(m => m.mesh.name === sData.customOrbit.moonName) : null;
-                    
-                    if (primaryBody && secondaryBodyObj && secondaryMoonData) {
-                        parentObjectMesh = primaryBody.mesh; 
-                        // Correctly calculate L5 orbital radius from the center of the primary (Earth)
-                        parentOrbitalRadius = (planetsData.find(pd => pd.name === primaryBody.mesh.userData.name).visualRadius + secondaryMoonData.orbitalRadius); 
-                        parentCurrentAngle = secondaryBodyObj.currentAngle;   
-                        sData.orbitalRadius = parentOrbitalRadius; 
-                        sData.orbitalPeriodDays = secondaryMoonData.orbitalPeriodDays; 
-                    } else {
-                        console.warn("Could not find parent/moon for L5 station:", sData.name);
-                        parentObjectMesh = sun; 
-                        sData.orbitalRadius = 50 * DISTANCE_SCALE_AU_TO_THREEJS; 
+                         sData.orbitalRadius = 40 * DISTANCE_SCALE_AU_TO_THREEJS;
                     }
                 }
+                // Removed customOrbit logic for L1 and L5
 
                 // Corrected stationOrbitalRadius logic
                 let stationOrbitalRadius;
                 if (sData.orbitsBody === "Sun" && sData.orbitalRadiusAU) {
                     stationOrbitalRadius = sData.orbitalRadiusAU * DISTANCE_SCALE_AU_TO_THREEJS;
-                } else if (sData.customOrbit && sData.customOrbit.lagrangePoint === "L5") {
-                    stationOrbitalRadius = sData.orbitalRadius; // Already calculated correctly above
                 } else if (sData.inAsteroidBelt) {
-                    stationOrbitalRadius = sData.orbitalRadius; // Already calculated correctly above
+                    stationOrbitalRadius = sData.orbitalRadius;
                 } else {
                     // For stations orbiting planets or moons, sData.orbitalRadius is from the parent's center
-                    stationOrbitalRadius = sData.orbitalRadius; 
+                    // or already scaled if it was an L-point station (now removed)
+                    stationOrbitalRadius = sData.orbitalRadius;
                 }
                 
                 let initialAngle = Math.random() * Math.PI * 2;
-                if (sData.customOrbit && sData.customOrbit.lagrangePoint === "L5") {
-                    initialAngle = parentCurrentAngle - Math.PI / 3; 
-                }
+                // Removed customOrbit angle adjustments
                 
                 stationMesh.position.x = stationOrbitalRadius * Math.cos(initialAngle);
                 stationMesh.position.z = stationOrbitalRadius * Math.sin(initialAngle);
@@ -1462,9 +1431,9 @@
                 }
 
 
-                if (parentObjectMesh && !(sData.inAsteroidBelt || (sData.customOrbit && sData.customOrbit.lagrangePoint))) {
+                if (parentObjectMesh && !sData.inAsteroidBelt) { // Simplified: if parented and not asteroid base, add to parent
                     parentObjectMesh.add(stationMesh);
-                } else { 
+                } else { // Add to scene (Sun-orbiting, asteroid base, or unparented)
                     scene.add(stationMesh);
                 }
                 
@@ -1476,10 +1445,7 @@
                     currentAngle: initialAngle,
                     rotationSpeed: sData.rotationSpeed || 0,
                     orbitalInclinationRad: (parentObjectMesh === sun && sData.orbitalInclinationDegrees) ? THREE.MathUtils.degToRad(sData.orbitalInclinationDegrees) : 0,
-                    isL5Station: (sData.customOrbit && sData.customOrbit.lagrangePoint === "L5"),
-                    l5ParentMoonName: (sData.customOrbit && sData.customOrbit.lagrangePoint === "L5") ? sData.customOrbit.moonName : null,
-                    l5ParentPlanetName: (sData.customOrbit && sData.customOrbit.lagrangePoint === "L5") ? sData.customOrbit.parentPlanetName : null
-
+                    // Removed Lagrange-specific properties: isL5Station, l5ParentMoonName, l5ParentPlanetName, isL1Station, l1SecondaryBodyName
                 };
                 stations.push(stationObject);
                 clickableObjects.push(stationMesh);
@@ -1820,27 +1786,28 @@
                 });
 
                 stations.forEach(s => {
-                    if (s.isL5Station) {
-                        const primaryBody = planets.find(p => p.mesh.userData.name === s.l5ParentPlanetName);
-                        const secondaryBodyObj = primaryBody ? primaryBody.moonObjects.find(m => m.mesh.name === s.l5ParentMoonName) : null;
-                        if (primaryBody && secondaryBodyObj) {
-                            const lagrangeAngle = secondaryBodyObj.currentAngle - Math.PI / 3;
-                            s.currentAngle = lagrangeAngle; 
-                            s.mesh.position.x = s.orbitalRadius * Math.cos(s.currentAngle);
-                            s.mesh.position.z = s.orbitalRadius * Math.sin(s.currentAngle);
-                        }
-                    } else {
-                        s.currentAngle += s.angularSpeedBase * simulationSpeed;
+                    // Removed isL5Station and isL1Station specific logic.
+                    // Standard station update logic:
+                    s.currentAngle += s.angularSpeedBase * simulationSpeed;
                         let newStationPos = new THREE.Vector3(
                             s.orbitalRadius * Math.cos(s.currentAngle),
                             0, 
                             s.orbitalRadius * Math.sin(s.currentAngle)
                         );
-                        if (s.parentMesh === sun && s.orbitalInclinationRad) {
+                        if (s.parentMesh === sun && s.orbitalInclinationRad) { // For Sun-orbiting stations
                             newStationPos.applyAxisAngle(new THREE.Vector3(1,0,0), s.orbitalInclinationRad);
                         }
-                        s.mesh.position.copy(newStationPos);
-                    }
+                        // If station is parented to a planet/moon, its position is relative.
+                        // If parented to Sun or scene, its position is absolute.
+                        // The createStations logic adds stations orbiting planets/moons to those objects.
+                        // Sun-orbiting stations are added to the scene.
+                        if (s.parentMesh && s.parentMesh !== sun) {
+                             // Position is already relative to parent, THREE.js handles world transform
+                             s.mesh.position.copy(newStationPos);
+                        } else { // Orbiting Sun or unparented (should be added to scene)
+                             s.mesh.position.copy(newStationPos);
+                        }
+                    // The extra '}' was here, now removed. The 's.currentAngle += ...' is the start of the main logic block.
 
                     if (s.rotationSpeed) {
                         if(s.mesh.userData.type === "ONEILL_CYLINDER" || s.mesh.userData.type === "CORIOLIS" || s.mesh.userData.type === "TRUSS_SPINDLE"){
