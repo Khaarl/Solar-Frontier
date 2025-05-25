@@ -1,0 +1,220 @@
+body { margin: 0; overflow: hidden; background-color: #000; color: #fff; font-family: Arial, sans-serif; }
+canvas { display: block; }
+#infoBox {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.7);
+    border-radius: 5px;
+    font-size: 12px;
+    max-width: 250px;
+    z-index: 10;
+}
+#controlsInfo {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.7);
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 10;
+}
+#simulationControls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.7);
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+#simulationControls button {
+    background-color: #444;
+    color: white;
+    border: 1px solid #666;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    width: 100%;
+}
+#simulationControls button:hover {
+    background-color: #555;
+}
+#simulationControls button.gemini-button {
+    background-color: #007bff;
+    border-color: #0056b3;
+}
+#simulationControls button.gemini-button:hover {
+    background-color: #0056b3;
+}
+#simulationControls span, #simulationControls label {
+    text-align: center;
+    display: block;
+    margin-bottom: 4px;
+}
+#speedSlider {
+    width: 150px;
+    margin-bottom: 5px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: #282c34;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    color: #fff;
+}
+.modal-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    font-size: 1.2em;
+}
+.modal-body {
+    padding-top: 10px;
+    line-height: 1.6;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+.modal-body ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.modal-body li {
+    margin-bottom: 8px;
+}
+.modal-body li strong {
+    display: inline-block;
+    min-width: 130px;
+    color: #61dafb;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close-button:hover,
+.close-button:focus {
+    color: #fff;
+    text-decoration: none;
+}
+.loading-indicator {
+    text-align: center;
+    font-style: italic;
+}
+
+#objectSelectionMenu {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin-top: 180px; /* Adjusted to not overlap sim controls */
+    padding: 10px;
+    background-color: rgba(0,0,0,0.85);
+    border: 1px solid #555;
+    border-radius: 5px;
+    z-index: 20;
+    max-height: 60vh;
+    width: 250px;
+    overflow-y: auto;
+    color: #eee;
+}
+#objectSelectionMenu h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #00bcd4;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+#objectSelectionMenu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#objectSelectionMenu li {
+    padding: 6px 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    border-bottom: 1px solid #333;
+}
+ #objectSelectionMenu li:last-child {
+    border-bottom: none;
+}
+#objectSelectionMenu li:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #FFEB3B;
+}
+.menu-item-parent > .object-name {
+     display: inline-block;
+}
+.menu-item-parent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.child-toggle {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 5px;
+    color: #00bcd4;
+}
+.child-list {
+    list-style: none;
+    padding-left: 20px;
+    display: none;
+    max-height: 150px;
+    overflow-y: auto;
+}
+.child-list li {
+    font-size: 0.85em;
+    color: #ccc;
+    border-bottom: 1px dashed #444;
+}
+ .child-list li:last-child {
+    border-bottom: none;
+}
+.station-menu-item {
+    color: #90EE90; /* Light green for stations */
+}
+.ship-menu-item {
+    color: #ADD8E6; /* Light blue for ships */
+}
+#commoditiesTable th, #commoditiesTable td,
+#passengersTable th, #passengersTable td {
+    border: 1px solid #444; padding: 6px; text-align: left; font-size: 0.9em;
+}
+#commoditiesTable th, #passengersTable th { background-color: #333a44; }
+#commoditiesTable button, #passengersTable button { font-size: 0.85em; padding: 3px 6px; margin: 0 2px;}
+#playerCargoList li, #playerPassengerList li { margin-bottom: 3px; background-color: #303030; padding: 2px 4px; border-radius:3px;}
+
+#shipOverviewTable th, #shipOverviewTable td {
+    border: 1px solid #444; padding: 6px; text-align: left; font-size: 0.9em;
+}
+#shipOverviewTable th { background-color: #333a44; }
