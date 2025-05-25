@@ -1250,7 +1250,7 @@
             group.add(cockpitMesh);
             
             // Antenna
-            const antennaMaterial = new THREE.MeshBasicMaterial({color: 0CCCCCC});
+            const antennaMaterial = new THREE.MeshBasicMaterial({color: 0xCCCCCC});
             const antennaGeom = new THREE.CylinderGeometry(0.01, 0.01, 0.2, 4);
             const antenna = new THREE.Mesh(antennaGeom, antennaMaterial);
             antenna.position.set(shipLength * 0.25, shipHeight * 0.5 + 0.1, 0); // On top of cockpit
