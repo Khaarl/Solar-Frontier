@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Solar System (Gemini Planet Facts) - Alien Fleets, Asteroids & Comets!</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; color: #fff; font-family: Arial, sans-serif; }
+        canvas { display: block; }
+        #infoBox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.7);
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 250px;
+            z-index: 10;
+        }
+        #controlsInfo {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.7);
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        #simulationControls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.7);
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #simulationControls button {
+            background-color: #444;
+            color: white;
+            border: 1px solid #666;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #simulationControls button:hover {
+            background-color: #555;
+        }
+        #simulationControls button.gemini-button {
+            background-color: #007bff; 
+            border-color: #0056b3;
+        }
+        #simulationControls button.gemini-button:hover {
+            background-color: #0056b3;
+        }
+        #simulationControls span {
+            text-align: center;
+        }
+        /* Modal styles */
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 100; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #282c34;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+            color: #fff;
+        }
+        .modal-header {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            font-size: 1.2em;
+        }
+        .modal-body {
+            padding-top: 10px;
+            line-height: 1.6;
+            max-height: 70vh; 
+            overflow-y: auto;
+        }
+        .modal-body ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+        .modal-body li strong {
+            display: inline-block;
+            min-width: 130px; 
+            color: #61dafb;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff;
+            text-decoration: none;
+        }
+        .loading-indicator {
+            text-align: center;
+            font-style: italic;
+        }
+
+        #cometSelectionMenu {
+            display: none; 
+            position: absolute;
+            top: 10px; 
+            right: 10px; 
+            margin-top: 230px; 
+            padding: 10px;
+            background-color: rgba(0,0,0,0.8);
+            border: 1px solid #555;
+            border-radius: 5px;
+            z-index: 20; 
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #cometSelectionMenu h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1em;
+            color: #00bcd4;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+        #cometSelectionMenu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #cometSelectionMenu li {
+            padding: 5px 0;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        #cometSelectionMenu li:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #FFEB3B;
+        }
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="infoBox">
+        Loading Solar System...
+    </div>
+    <div id="controlsInfo">
+        Press F1 for Controls.
+    </div>
+    <div id="simulationControls">
+        <button id="pauseButton">Pause</button>
+        <span>Speed: <span id="speedDisplay">1.0</span>x</span>
+        <button id="speedUpButton">Speed Up</button>
+        <button id="speedDownButton">Slow Down</button>
+        <button id="geminiPlanetInfoButton" class="gemini-button" style="display: none;">✨ Tell Me About...</button>
+        <button id="fullscreenButton">Toggle Fullscreen</button> 
+    </div>
+
+    <div id="cometSelectionMenu">
+        <h3>Select Comet</h3>
+        <ul id="cometList">
+            </ul>
+    </div>
+
+    <div id="geminiInfoModal" class="modal"> 
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" id="closeModalButton">&times;</span>
+                <h2 id="modalTitle">Information</h2>
+            </div>
+            <div class="modal-body" id="modalBodyContent">
+                <p class="loading-indicator">Fetching information...</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let scene, camera, renderer, controls;
+        let sun, planets = []; 
+        let globalClock;
+        let raycaster, mouse;
+        
+        let clickableObjects = []; 
+        let orderedSelectableObjects = []; 
+        let currentSelectableObjectIndex = 0; 
+
+        let focusedObject = null; 
+        let highlightMesh;
+        let targetCameraPositionForFocus = null;
+        let targetLookAtForFocus = null; 
+
+        let simulationSpeed = 0.1;
+        const MOON_SIMULATION_SPEED_MULTIPLIER = 5; 
+        const MAX_SIMULATION_SPEED = 2.0;
+        const MIN_SIMULATION_SPEED = 0.0;
+        const SPEED_INCREMENT = 0.05;
+        let isPaused = false;
+        let isCKeyDown = false; 
+        let isFollowing = false; 
+
+        let isWDown = false;
+        let isSDown = false;
+        let isADown = false;
+        let isDDown = false;
+        let isZDown = false; 
+        let isXDown = false; 
+        const FREE_MOVE_SPEED = 200.0; 
+
+        let orbitLineMeshes = []; 
+        let orbitLinesVisible = true;
+
+        let asteroidBelts = []; 
+        let comets = []; 
+
+        const COMET_TRAIL_PROXIMITY_AU = 5; 
+        const MAX_TRAIL_POINTS = 70; 
+        const COMET_TRAIL_UPDATE_INTERVAL = 2; 
+        let frameCount = 0;
+
+        let sunCorona;
+        let solarFlares = [];
+        const NUM_SOLAR_FLARES = 8;
+
+
+        let pauseButton, speedDisplay, speedUpButton, speedDownButton, geminiPlanetInfoButton, fullscreenButton; 
+        let geminiInfoModal, closeModalButton, modalTitle, modalBodyContent;
+        let cometSelectionMenu, cometListElement; 
+
+        const sunData = { name: 'Sun', color: 0xFFFF00, visualRadius: 15 };
+        const planetsData = [
+            { name: 'Mercury', color: 0xAAAAAA, visualRadius: 0.6, orbitalRadiusAU: 0.39, orbitalPeriodYears: 0.24, orbitalInclinationDegrees: 7.0, moons: [] },
+            { name: 'Venus', color: 0xFFE4B5, visualRadius: 0.9, orbitalRadiusAU: 0.72, orbitalPeriodYears: 0.62, orbitalInclinationDegrees: 3.4, moons: [] },
+            { 
+                name: 'Earth', 
+                color: 0x6495ED, 
+                visualRadius: 1.0, 
+                orbitalRadiusAU: 1.00, 
+                orbitalPeriodYears: 1.0, 
+                orbitalInclinationDegrees: 0.0, 
+                moons: [
+                    { name: 'Moon', visualRadius: 0.27, orbitalRadius: 3, orbitalPeriodDays: 27.3, color: 0xDDDDDD },
+                    { name: 'Borg Cube', isCube: true, visualSize: 0.3, orbitalRadius: 4, orbitalPeriodDays: 5, color: 0x00FF00 } 
+                ] 
+            },
+            { name: 'Mars', color: 0xFF4500, visualRadius: 0.7, orbitalRadiusAU: 1.52, orbitalPeriodYears: 1.88, orbitalInclinationDegrees: 1.9, moons: [{ name: 'Phobos', visualRadius: 0.1, orbitalRadius: 1.5, orbitalPeriodDays: 0.3, color: 0x999999 }, { name: 'Deimos', visualRadius: 0.08, orbitalRadius: 2.5, orbitalPeriodDays: 1.26, color: 0xBBBBBB }] },
+            { name: 'Jupiter', color: 0xFFDEAD, visualRadius: 5.0, orbitalRadiusAU: 5.20, orbitalPeriodYears: 11.86, orbitalInclinationDegrees: 1.3, moons: [{ name: 'Io', visualRadius: 0.36, orbitalRadius: 6, orbitalPeriodDays: 1.77, color: 0xFFFFE0 }, { name: 'Europa', visualRadius: 0.31, orbitalRadius: 8, orbitalPeriodDays: 3.55, color: 0xD2B48C }, { name: 'Ganymede', visualRadius: 0.52, orbitalRadius: 11, orbitalPeriodDays: 7.15, color: 0xBCB88A }, { name: 'Callisto', visualRadius: 0.48, orbitalRadius: 15, orbitalPeriodDays: 16.69, color: 0xA9A9A9 }] },
+            { name: 'Saturn', color: 0xF0E68C, visualRadius: 4.2, orbitalRadiusAU: 9.58, orbitalPeriodYears: 29.46, orbitalInclinationDegrees: 2.5, hasRings: true, moons: [{ name: 'Titan', visualRadius: 0.51, orbitalRadius: 7, orbitalPeriodDays: 15.95, color: 0xFFD700 }] },
+            { 
+                name: 'Uranus', 
+                color: 0xAFEEEE, 
+                visualRadius: 2.5, 
+                orbitalRadiusAU: 19.22, 
+                orbitalPeriodYears: 84.01, 
+                orbitalInclinationDegrees: 0.8, 
+                moons: [
+                    { name: 'Titania', visualRadius: 0.15, orbitalRadius: 5, orbitalPeriodDays: 8.7, color: 0xB0E0E6 }, 
+                    { name: 'Oberon', visualRadius: 0.14, orbitalRadius: 6.5, orbitalPeriodDays: 13.46, color: 0xADDDDDD },
+                    { name: 'Ashtar Command Ship 1', isSpaceship: true, visualSize: 0.15, orbitalRadius: 3.5, orbitalPeriodDays: 2, color: 0xFF00FF, fleetOffsetAngle: 0 },
+                    { name: 'Ashtar Command Ship 2', isSpaceship: true, visualSize: 0.15, orbitalRadius: 3.55, orbitalPeriodDays: 2, color: 0xFF00FF, fleetOffsetAngle: 0.1 },
+                    { name: 'Ashtar Command Ship 3', isSpaceship: true, visualSize: 0.15, orbitalRadius: 3.45, orbitalPeriodDays: 2, color: 0xFF00FF, fleetOffsetAngle: -0.1 },
+                    { name: 'Ashtar Command Ship 4', isSpaceship: true, visualSize: 0.15, orbitalRadius: 3.52, orbitalPeriodDays: 2, color: 0xFF00FF, fleetOffsetAngle: 0.2 },
+                    { name: 'Ashtar Command Ship 5', isSpaceship: true, visualSize: 0.15, orbitalRadius: 3.48, orbitalPeriodDays: 2, color: 0xFF00FF, fleetOffsetAngle: -0.2 },
+                ] 
+            },
+            { name: 'Neptune', color: 0x4682B4, visualRadius: 2.3, orbitalRadiusAU: 30.05, orbitalPeriodYears: 164.8, orbitalInclinationDegrees: 1.8, moons: [{ name: 'Triton', visualRadius: 0.27, orbitalRadius: 4.5, orbitalPeriodDays: 5.88, color: 0x708090 }] }
+        ];
+        const DISTANCE_SCALE_AU_TO_THREEJS = 70;
+
+        const asteroidBeltsData = [
+            { 
+                name: "Main Asteroid Belt", 
+                count: 300, 
+                minRadiusAU: 2.2, 
+                maxRadiusAU: 3.2, 
+                minInclination: -5, 
+                maxInclination: 5, 
+                thickness: 0.5 * DISTANCE_SCALE_AU_TO_THREEJS, 
+                color: 0x888888 
+            },
+            { 
+                name: "Outer Belt", 
+                count: 200, 
+                minRadiusAU: 35, 
+                maxRadiusAU: 50, 
+                minInclination: -15, 
+                maxInclination: 15, 
+                thickness: 2 * DISTANCE_SCALE_AU_TO_THREEJS,
+                color: 0x777777
+            }
+        ];
+
+        const cometsData = [
+            { 
+                name: "Comet Halley-Type", 
+                visualRadius: 0.3, 
+                color: 0xEEEEFF, 
+                semiMajorAxisAU: 17.8, 
+                eccentricity: 0.96,    
+                inclinationDegrees: 18.0, 
+                longitudeOfAscendingNodeDegrees: 58.0, 
+                argumentOfPeriapsisDegrees: 111.0, 
+                orbitalPeriodYears: 75 
+            },
+            { 
+                name: "Comet Swift-Tuttle-Like", 
+                visualRadius: 0.25, 
+                color: 0xDDEEFF,
+                semiMajorAxisAU: 26.0,
+                eccentricity: 0.963,
+                inclinationDegrees: 113.0,
+                longitudeOfAscendingNodeDegrees: 139.0,
+                argumentOfPeriapsisDegrees: 153.0,
+                orbitalPeriodYears: 133
+            }
+        ];
+
+
+        function init() {
+            if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
+                document.getElementById('infoBox').textContent = "Error: Essential 3D libraries failed to load.";
+                console.error("THREE.js or OrbitControls not loaded.");
+                return;
+            }
+
+            globalClock = new THREE.Clock();
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+            camera.position.set(0, 200, 350);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const sunLight = new THREE.PointLight(sunData.color, 2, 5000, 0.5);
+            scene.add(sunLight);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 0.5;
+            controls.maxDistance = 5000;
+            controls.enableRotate = false; 
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            pauseButton = document.getElementById('pauseButton');
+            speedDisplay = document.getElementById('speedDisplay');
+            speedUpButton = document.getElementById('speedUpButton');
+            speedDownButton = document.getElementById('speedDownButton');
+            geminiPlanetInfoButton = document.getElementById('geminiPlanetInfoButton');
+            fullscreenButton = document.getElementById('fullscreenButton'); 
+            geminiInfoModal = document.getElementById('geminiInfoModal');
+            closeModalButton = document.getElementById('closeModalButton');
+            modalTitle = document.getElementById('modalTitle');
+            modalBodyContent = document.getElementById('modalBodyContent');
+            cometSelectionMenu = document.getElementById('cometSelectionMenu'); 
+            cometListElement = document.getElementById('cometList'); 
+
+            updateSpeedDisplay();
+
+            pauseButton.addEventListener('click', togglePause);
+            speedUpButton.addEventListener('click', () => changeSpeed(SPEED_INCREMENT));
+            speedDownButton.addEventListener('click', () => changeSpeed(-SPEED_INCREMENT));
+            geminiPlanetInfoButton.addEventListener('click', () => openInfoModal('planet_comet')); 
+            fullscreenButton.addEventListener('click', toggleBrowserFullscreen); 
+            closeModalButton.addEventListener('click', () => { 
+                geminiInfoModal.style.display = "none";
+                cometSelectionMenu.style.display = "none"; 
+            });
+            window.addEventListener('click', (event) => { 
+                if (event.target == geminiInfoModal) {
+                    geminiInfoModal.style.display = "none";
+                }
+            });
+
+            const highlightSegments = 32;
+            const highlightPoints = [];
+            for (let i = 0; i <= highlightSegments; i++) {
+                const angle = (i / highlightSegments) * Math.PI * 2;
+                highlightPoints.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
+            }
+            const highlightGeometry = new THREE.BufferGeometry().setFromPoints(highlightPoints);
+            const highlightMaterial = new THREE.LineBasicMaterial({ color: 0xFFFF00, transparent: true, opacity: 0.9 });
+            highlightMesh = new THREE.LineLoop(highlightGeometry, highlightMaterial);
+            highlightMesh.visible = false;
+            scene.add(highlightMesh);
+
+            createSun();
+            createSunCorona(); 
+            createSolarFlares(); 
+            createPlanetsAndMoons();
+            createAsteroidBelts(); 
+            createComets();       
+            
+            orderedSelectableObjects.push(sun); 
+            planets.forEach(p => orderedSelectableObjects.push(p.mesh)); 
+            comets.forEach(c => orderedSelectableObjects.push(c.mesh)); 
+
+            createStars(); 
+
+            if (orderedSelectableObjects.length > 0) {
+                selectObjectByInteraction(orderedSelectableObjects[0]); 
+                currentSelectableObjectIndex = 0;
+            } else {
+                updateInfoBox(); 
+            }
+            
+            window.addEventListener('resize', onWindowResize, false);
+            renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
+            window.addEventListener('keydown', onKeyDown, false);
+            window.addEventListener('keyup', onKeyUp, false);
+
+            document.getElementById('controlsInfo').textContent = "Press F1 for Controls.";
+            
+            animate(); 
+        }
+
+        function onKeyDown(event) {
+            switch(event.key.toLowerCase()) {
+                case 'c':
+                    isCKeyDown = true;
+                    controls.enableRotate = true; 
+                    break;
+                case '[':
+                    selectNextOrPreviousObject('previous');
+                    break;
+                case ']':
+                    selectNextOrPreviousObject('next');
+                    break;
+                case 'f':
+                    isFollowing = !isFollowing;
+                    if (isFollowing && focusedObject) {
+                        const objectToFollow = focusedObject;
+                        targetLookAtForFocus = objectToFollow.getWorldPosition(new THREE.Vector3());
+
+                        const objectRadius = (focusedObject.userData.isPlanet || focusedObject.userData.name === "Sun") 
+                                            ? (focusedObject.userData.name === "Sun" ? sunData.visualRadius : focusedObject.userData.visualRadius)
+                                            : (focusedObject.userData.isComet ? focusedObject.userData.visualRadius : 1); 
+                        let offsetDistance = objectRadius * 4; 
+                        if (focusedObject.userData.name === "Sun") offsetDistance = objectRadius * 2.5;
+
+                        const direction = new THREE.Vector3();
+                        camera.getWorldDirection(direction);
+                        targetCameraPositionForFocus = new THREE.Vector3()
+                            .copy(targetLookAtForFocus)
+                            .add(direction.multiplyScalar(-offsetDistance));
+                    } else if (!isFollowing) {
+                        targetCameraPositionForFocus = null;
+                        targetLookAtForFocus = null;
+                    }
+                    updateInfoBox(); 
+                    break;
+                case 'enter': 
+                    event.preventDefault(); 
+                    if (focusedObject) {
+                        // *** MODIFIED: Toggle follow mode with Enter ***
+                        if (isFollowing) {
+                            isFollowing = false;
+                            targetCameraPositionForFocus = null; 
+                            targetLookAtForFocus = null; 
+                        } else {
+                            isFollowing = true; 
+                            controls.target.copy(focusedObject.getWorldPosition(new THREE.Vector3())); 
+                            
+                            const objectRadius = (focusedObject.userData.isPlanet || focusedObject.userData.name === "Sun") 
+                                                ? (focusedObject.userData.name === "Sun" ? sunData.visualRadius : focusedObject.userData.visualRadius)
+                                                : (focusedObject.userData.isComet ? focusedObject.userData.visualRadius : 1);
+                            
+                            let mediumDistanceMultiplier;
+                            if (focusedObject.userData.name === "Sun") mediumDistanceMultiplier = 3.5;
+                            else if (focusedObject.userData.isPlanet) mediumDistanceMultiplier = 6;
+                            else if (focusedObject.userData.isComet) mediumDistanceMultiplier = 25;
+                            else mediumDistanceMultiplier = 10; 
+
+                            const followDistance = objectRadius * mediumDistanceMultiplier;
+                            // Maintain current camera direction relative to the object when starting to follow
+                            const directionFromObjectToCamera = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+                            if (directionFromObjectToCamera.lengthSq() === 0) { // Avoid issues if camera is at target
+                                camera.getWorldDirection(directionFromObjectToCamera);
+                                directionFromObjectToCamera.negate();
+                            }
+                            targetCameraPositionForFocus = new THREE.Vector3().addVectors(controls.target, directionFromObjectToCamera.multiplyScalar(followDistance));
+                            targetLookAtForFocus = null; 
+                        }
+                        updateInfoBox();
+                    }
+                    break;
+                case 'w': isWDown = true; break;
+                case 's': isSDown = true; break;
+                case 'a': isADown = true; break;
+                case 'd': isDDown = true; break;
+                case 'z': isZDown = true; break; 
+                case 'x': isXDown = true; break; 
+                case 'o':
+                    orbitLinesVisible = !orbitLinesVisible;
+                    orbitLineMeshes.forEach(line => {
+                        line.visible = orbitLinesVisible;
+                    });
+                    break;
+                case 'f1':
+                    event.preventDefault(); 
+                    openInfoModal('controls');
+                    break;
+                case 'f2':
+                    event.preventDefault();
+                    cometSelectionMenu.style.display = cometSelectionMenu.style.display === 'block' ? 'none' : 'block';
+                    break;
+            }
+        }
+
+        function onKeyUp(event) {
+            switch(event.key.toLowerCase()) {
+                case 'c':
+                    isCKeyDown = false;
+                    controls.enableRotate = false;
+                    break;
+                case 'w': isWDown = false; break;
+                case 's': isSDown = false; break;
+                case 'a': isADown = false; break;
+                case 'd': isDDown = false; break;
+                case 'z': isZDown = false; break; 
+                case 'x': isXDown = false; break; 
+            }
+        }
+        
+        function updateInfoBox() {
+            let statusText = isPaused ? "(Paused)" : "(Running)";
+            if (isWDown || isSDown || isADown || isDDown || isZDown || isXDown) { 
+                 document.getElementById('infoBox').textContent = `Free Moving ${statusText}`;
+            } else if (focusedObject) {
+                const objectName = focusedObject.userData.name || "Unknown Object";
+                if (isFollowing) {
+                    document.getElementById('infoBox').textContent = `Following: ${objectName}`;
+                } else {
+                    document.getElementById('infoBox').textContent = `Focused on: ${objectName} ${statusText}`;
+                }
+            } else {
+                document.getElementById('infoBox').textContent = `Solar System ${statusText}`;
+            }
+        }
+
+        function selectObjectByInteraction(objectToSelect, maintainCameraDirection = true) {
+            if (!objectToSelect) return;
+
+            focusedObject = objectToSelect;
+            if (!(isWDown || isSDown || isADown || isDDown || isZDown || isXDown)) { 
+                 targetLookAtForFocus = focusedObject.getWorldPosition(new THREE.Vector3());
+                const objectRadius = (focusedObject.userData.isPlanet || focusedObject.userData.name === "Sun") 
+                                    ? (focusedObject.userData.name === "Sun" ? sunData.visualRadius : focusedObject.userData.visualRadius)
+                                    : (focusedObject.userData.isComet ? focusedObject.userData.visualRadius : 1); 
+                let offsetDistance = objectRadius * 5; 
+                if (focusedObject.userData.name === "Sun") offsetDistance = objectRadius * 3;
+                if (focusedObject.userData.isComet) offsetDistance = objectRadius * 20; 
+
+                if (maintainCameraDirection) {
+                    const direction = new THREE.Vector3();
+                    camera.getWorldDirection(direction); 
+                    targetCameraPositionForFocus = new THREE.Vector3()
+                        .copy(targetLookAtForFocus) 
+                        .add(direction.multiplyScalar(-offsetDistance));
+                } else { 
+                    targetCameraPositionForFocus = new THREE.Vector3(
+                        targetLookAtForFocus.x,
+                        targetLookAtForFocus.y + offsetDistance * 0.7, 
+                        targetLookAtForFocus.z + offsetDistance * 0.7  
+                    );
+                }
+            } else { 
+                targetLookAtForFocus = null;
+                targetCameraPositionForFocus = null;
+            }
+            
+            updateInfoBox(); 
+            updateHighlightAndGeminiButton();
+
+            currentSelectableObjectIndex = orderedSelectableObjects.findIndex(obj => obj === focusedObject);
+            if (cometSelectionMenu.style.display === 'block' && !objectToSelect.userData.isComet) {
+            }
+        }
+
+        function selectNextOrPreviousObject(direction) {
+            if (orderedSelectableObjects.length === 0) return;
+
+            if (direction === 'next') {
+                currentSelectableObjectIndex++;
+                if (currentSelectableObjectIndex >= orderedSelectableObjects.length) {
+                    currentSelectableObjectIndex = 0; 
+                }
+            } else if (direction === 'previous') {
+                currentSelectableObjectIndex--;
+                if (currentSelectableObjectIndex < 0) {
+                    currentSelectableObjectIndex = orderedSelectableObjects.length - 1; 
+                }
+            }
+            selectObjectByInteraction(orderedSelectableObjects[currentSelectableObjectIndex], false); 
+        }
+
+
+        function togglePause() {
+            isPaused = !isPaused;
+            pauseButton.textContent = isPaused ? "Resume" : "Pause";
+            updateInfoBox(); 
+
+            if (!isPaused) {
+                controls.enableRotate = isCKeyDown;
+            } else {
+                controls.enableRotate = false; 
+            }
+        }
+
+        function updateHighlightAndGeminiButton() {
+            if (focusedObject && (focusedObject.userData.isPlanet || focusedObject.userData.name === "Sun" || focusedObject.userData.isComet)) {
+                highlightMesh.position.copy(focusedObject.getWorldPosition(new THREE.Vector3()));
+                const scaleFactor = focusedObject.userData.name === "Sun" ? sunData.visualRadius 
+                                  : (focusedObject.userData.isPlanet ? focusedObject.userData.visualRadius 
+                                  : (focusedObject.userData.isComet ? focusedObject.userData.visualRadius * 2 : 1)); 
+                const scale = scaleFactor * 1.6; 
+                highlightMesh.scale.set(scale, scale, scale);
+                highlightMesh.visible = true;
+
+                if (focusedObject.userData.isPlanet || focusedObject.userData.name === "Sun" || focusedObject.userData.isComet) { 
+                    geminiPlanetInfoButton.textContent = `✨ Tell Me About ${focusedObject.userData.name}`;
+                    geminiPlanetInfoButton.style.display = 'block';
+                } else {
+                    geminiPlanetInfoButton.style.display = 'none';
+                }
+            } else {
+                highlightMesh.visible = false;
+                geminiPlanetInfoButton.style.display = 'none';
+            }
+        }
+
+        function changeSpeed(amount) {
+            simulationSpeed += amount;
+            simulationSpeed = Math.max(MIN_SIMULATION_SPEED, Math.min(MAX_SIMULATION_SPEED, simulationSpeed));
+            updateSpeedDisplay();
+        }
+
+        function updateSpeedDisplay() {
+            speedDisplay.textContent = simulationSpeed.toFixed(2);
+        }
+
+        function createSun() {
+            const geometry = new THREE.SphereGeometry(sunData.visualRadius, 32, 16);
+            const material = new THREE.MeshBasicMaterial({ color: sunData.color, wireframe: true });
+            sun = new THREE.Mesh(geometry, material);
+            sun.userData = { isPlanet: false, visualRadius: sunData.visualRadius, name: "Sun" }; 
+            scene.add(sun);
+            clickableObjects.push(sun); 
+            const pointLight = scene.getObjectByProperty('type', 'PointLight');
+            if (pointLight) pointLight.position.copy(sun.position); 
+        }
+
+        function createSunCorona() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 0,
+                canvas.width / 2, canvas.height / 2, canvas.width / 2
+            );
+            gradient.addColorStop(0.1, 'rgba(255,220,150,0.8)'); 
+            gradient.addColorStop(0.3, 'rgba(255,200,100,0.4)');
+            gradient.addColorStop(1, 'rgba(255,160,0,0)');    
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            const texture = new THREE.CanvasTexture(canvas);
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                blending: THREE.AdditiveBlending, 
+                transparent: true,
+                opacity: 0.7
+            });
+            sunCorona = new THREE.Sprite(spriteMaterial);
+            sunCorona.scale.set(sunData.visualRadius * 3.5, sunData.visualRadius * 3.5, 1); 
+            sun.add(sunCorona); 
+        }
+
+        function createSolarFlares() {
+            const flareMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFF8800, 
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending
+            });
+
+            for (let i = 0; i < NUM_SOLAR_FLARES; i++) {
+                const flareHeight = sunData.visualRadius * (1 + Math.random() * 1.5); 
+                const flareWidth = sunData.visualRadius * 0.1 * (0.5 + Math.random() * 0.5); 
+                const flareGeometry = new THREE.PlaneGeometry(flareWidth, flareHeight);
+                const flare = new THREE.Mesh(flareGeometry, flareMaterial.clone()); 
+
+                const phi = Math.random() * Math.PI * 2; 
+                const theta = (Math.random() - 0.5) * Math.PI; 
+
+                flare.position.setFromSphericalCoords(sunData.visualRadius * 1.05, phi, theta); 
+                flare.lookAt(sun.position); 
+                flare.rotateX(Math.PI / 2); 
+
+                flare.userData = {
+                    baseScaleY: flareHeight,
+                    isActive: false,
+                    timer: Math.random() * 10 
+                };
+                flare.visible = false;
+                sun.add(flare); 
+                solarFlares.push(flare);
+            }
+        }
+
+
+        function createPlanetsAndMoons() {
+            planetsData.forEach(pData => {
+                const planetGeometry = new THREE.SphereGeometry(pData.visualRadius, 16, 8);
+                const planetMaterial = new THREE.MeshBasicMaterial({ color: pData.color, wireframe: true });
+                const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial);
+                planetMesh.userData = { isPlanet: true, visualRadius: pData.visualRadius, name: pData.name };
+                
+                const orbitalInclinationRad = THREE.MathUtils.degToRad(pData.orbitalInclinationDegrees || 0);
+
+                const scaledPlanetOrbitalRadius = pData.orbitalRadiusAU * DISTANCE_SCALE_AU_TO_THREEJS;
+                const initialPlanetAngle = Math.random() * Math.PI * 2; 
+                
+                let initialPosVec = new THREE.Vector3(
+                    scaledPlanetOrbitalRadius * Math.cos(initialPlanetAngle),
+                    0,
+                    scaledPlanetOrbitalRadius * Math.sin(initialPlanetAngle)
+                );
+                initialPosVec.applyAxisAngle(new THREE.Vector3(1, 0, 0), orbitalInclinationRad);
+                planetMesh.position.copy(initialPosVec);
+
+
+                const planetObject = { 
+                    name: pData.name,
+                    mesh: planetMesh,
+                    orbitalRadius: scaledPlanetOrbitalRadius,
+                    angularSpeedBase: (2 * Math.PI) / (pData.orbitalPeriodYears * 100), 
+                    currentAngle: initialPlanetAngle,
+                    orbitalInclinationRad: orbitalInclinationRad, 
+                    moonObjects: []
+                };
+
+                if (pData.moons && pData.moons.length > 0) {
+                    pData.moons.forEach(mData => {
+                        let moonMesh;
+                        if (mData.isSpaceship) {
+                            const shipSize = mData.visualSize || 0.1; 
+                            const moonGeometry = new THREE.TetrahedronGeometry(shipSize, 0); 
+                            const moonMaterial = new THREE.MeshBasicMaterial({ color: mData.color, wireframe: true });
+                            moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+                        } else if (mData.isCube) {
+                            const cubeSize = mData.visualSize || 0.3; 
+                            const moonGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+                            const moonMaterial = new THREE.MeshBasicMaterial({ color: mData.color, wireframe: true });
+                            moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+                        } else { 
+                            const moonGeometry = new THREE.SphereGeometry(mData.visualRadius, 8, 4);
+                            const moonMaterial = new THREE.MeshBasicMaterial({ color: mData.color, wireframe: true });
+                            moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+                        }
+                        moonMesh.name = mData.name; 
+
+                        const scaledMoonOrbitalRadius = pData.visualRadius + mData.orbitalRadius; 
+                        const fleetAngleOffset = mData.isSpaceship ? (mData.fleetOffsetAngle || 0) : 0;
+                        const initialMoonAngle = (Math.random() * Math.PI * 0.2) + fleetAngleOffset; 
+
+                        moonMesh.position.x = scaledMoonOrbitalRadius * Math.cos(initialMoonAngle);
+                        moonMesh.position.z = scaledMoonOrbitalRadius * Math.sin(initialMoonAngle);
+                        planetMesh.add(moonMesh); 
+
+                        const moonObj = {
+                            mesh: moonMesh,
+                            orbitalRadius: scaledMoonOrbitalRadius,
+                            angularSpeedBase: (2 * Math.PI) / (mData.orbitalPeriodDays * 5), 
+                            currentAngle: initialMoonAngle,
+                            isSpaceship: mData.isSpaceship 
+                        };
+                        planetObject.moonObjects.push(moonObj);
+                    });
+                }
+                planets.push(planetObject); 
+                scene.add(planetMesh);
+                clickableObjects.push(planetMesh); 
+
+                const orbitPoints = [];
+                const orbitSegments = 64;
+                for (let i = 0; i <= orbitSegments; i++) {
+                    const angle = (i / orbitSegments) * Math.PI * 2;
+                    orbitPoints.push(new THREE.Vector3(scaledPlanetOrbitalRadius * Math.cos(angle), 0, scaledPlanetOrbitalRadius * Math.sin(angle)));
+                }
+                const orbitGeometry = new THREE.BufferGeometry().setFromPoints(orbitPoints);
+                const orbitMaterial = new THREE.LineBasicMaterial({ color: pData.color, transparent: true, opacity: 0.3 });
+                const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
+                orbitLine.rotation.x = orbitalInclinationRad; 
+                orbitLine.visible = orbitLinesVisible; 
+                scene.add(orbitLine);
+                orbitLineMeshes.push(orbitLine); 
+
+                if (pData.hasRings) {
+                    const ringInnerRadius = pData.visualRadius * 1.3;
+                    const ringOuterRadius = pData.visualRadius * 2.5;
+                    const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 32);
+                    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xAAAAAA, wireframe: true, side: THREE.DoubleSide });
+                    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+                    ringMesh.rotation.x = Math.PI / 2; 
+                    planetMesh.add(ringMesh);
+                }
+            });
+        }
+
+        function createAsteroidBelts() {
+            asteroidBeltsData.forEach(beltData => {
+                const beltAsteroids = [];
+                for (let i = 0; i < beltData.count; i++) {
+                    let asteroidGeometry;
+                    const type = Math.random();
+                    const size = 0.03 + Math.random() * 0.07; 
+
+                    if (type < 0.4) {
+                        asteroidGeometry = new THREE.IcosahedronGeometry(size, 0);
+                    } else if (type < 0.7) {
+                        asteroidGeometry = new THREE.DodecahedronGeometry(size, 0);
+                    } else {
+                        asteroidGeometry = new THREE.TetrahedronGeometry(size, 0);
+                    }
+                    
+                    const asteroidMaterial = new THREE.MeshBasicMaterial({ 
+                        color: new THREE.Color(beltData.color).offsetHSL(Math.random() * 0.3 - 0.15, Math.random() * 0.2 - 0.1, Math.random() * 0.2 - 0.1), 
+                        wireframe: true 
+                    });
+                    const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+
+                    const radius = (beltData.minRadiusAU + Math.random() * (beltData.maxRadiusAU - beltData.minRadiusAU)) * DISTANCE_SCALE_AU_TO_THREEJS;
+                    const angle = Math.random() * Math.PI * 2;
+                    const inclination = THREE.MathUtils.degToRad(beltData.minInclination + Math.random() * (beltData.maxInclination - beltData.minInclination));
+                    
+                    let yOffset = (Math.random() - 0.5) * beltData.thickness; 
+
+                    let pos = new THREE.Vector3(radius * Math.cos(angle), yOffset, radius * Math.sin(angle));
+                    pos.applyAxisAngle(new THREE.Vector3(1,0,0), inclination); 
+
+                    asteroid.position.copy(pos);
+                    asteroid.userData = {
+                        isAsteroid: true,
+                        orbitalRadius: radius,
+                        currentAngle: angle,
+                        angularSpeedBase: (2 * Math.PI) / ((150 + Math.random() * 250) * 100), 
+                        orbitalInclinationRad: inclination,
+                        yOffset: yOffset 
+                    };
+                    scene.add(asteroid);
+                    beltAsteroids.push(asteroid);
+                }
+                asteroidBelts.push(beltAsteroids);
+            });
+        }
+
+        function createComets() {
+            cometListElement.innerHTML = ''; 
+
+            cometsData.forEach(cData => {
+                const cometGeometry = new THREE.SphereGeometry(cData.visualRadius, 8, 6);
+                const cometMaterial = new THREE.MeshBasicMaterial({ color: cData.color, wireframe: true });
+                const cometMesh = new THREE.Mesh(cometGeometry, cometMaterial);
+                cometMesh.userData = { 
+                    isComet: true, 
+                    name: cData.name, 
+                    visualRadius: cData.visualRadius 
+                };
+
+                const a = cData.semiMajorAxisAU * DISTANCE_SCALE_AU_TO_THREEJS;
+                const e = cData.eccentricity;
+                const r_perihelion = a * (1 - e); 
+
+                let pos = new THREE.Vector3(r_perihelion, 0, 0); 
+
+                const incl = THREE.MathUtils.degToRad(cData.inclinationDegrees);
+                const Omega = THREE.MathUtils.degToRad(cData.longitudeOfAscendingNodeDegrees);
+                const omega_arg = THREE.MathUtils.degToRad(cData.argumentOfPeriapsisDegrees);
+
+                pos.applyAxisAngle(new THREE.Vector3(0,0,1), omega_arg);
+                const xAxisOrbitalPlane = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,0,1), omega_arg);
+                pos.applyAxisAngle(xAxisOrbitalPlane, incl);
+                pos.applyAxisAngle(new THREE.Vector3(0,1,0), Omega); 
+                
+                cometMesh.position.copy(pos);
+
+                const trailMaterial = new THREE.LineBasicMaterial({ 
+                    color: cData.color, 
+                    transparent: true, 
+                    opacity: 0.5 
+                });
+                const trailGeometry = new THREE.BufferGeometry();
+                const trailMesh = new THREE.Line(trailGeometry, trailMaterial);
+                trailMesh.visible = false;
+                scene.add(trailMesh);
+
+                const cometObj = {
+                    mesh: cometMesh,
+                    data: cData, 
+                    currentAngle: 0, 
+                    angularSpeedBase: (2 * Math.PI) / (cData.orbitalPeriodYears * 100),
+                    trailPoints: [], 
+                    trailMesh: trailMesh 
+                };
+                comets.push(cometObj);
+                scene.add(cometMesh);
+                clickableObjects.push(cometMesh); 
+
+                const listItem = document.createElement('li');
+                listItem.textContent = cData.name;
+                listItem.addEventListener('click', () => {
+                    selectObjectByInteraction(cometMesh);
+                    cometSelectionMenu.style.display = 'none'; 
+                });
+                cometListElement.appendChild(listItem);
+            });
+        }
+
+
+        function createStars() {
+            const starVertices = [];
+            const starCount = 15000;
+            const starSpread = 6000; 
+            for (let i = 0; i < starCount; i++) {
+                let x, y, z, distSq;
+                const outermostOrbit = planetsData[planetsData.length - 1].orbitalRadiusAU * DISTANCE_SCALE_AU_TO_THREEJS;
+                const minStarDist = outermostOrbit * 1.5; 
+                do { 
+                    x = (Math.random() - 0.5) * 2 * starSpread;
+                    y = (Math.random() - 0.5) * 2 * starSpread;
+                    z = (Math.random() - 0.5) * 2 * starSpread;
+                    distSq = x * x + y * y + z * z;
+                } while (distSq < minStarDist * minStarDist || distSq > starSpread * starSpread);
+                starVertices.push(x, y, z);
+            }
+            const starGeometry = new THREE.BufferGeometry();
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, sizeAttenuation: false });
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        function onDocumentMouseDown(event) {
+            if (event.target.closest('#simulationControls') || event.target.closest('.modal') || event.target.closest('#cometSelectionMenu')) {
+                return;
+            }
+
+            if (!isCKeyDown && event.button === 0) { 
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(clickableObjects, false); 
+
+                if (intersects.length > 0) {
+                    if (intersects[0].object !== focusedObject) {
+                         selectObjectByInteraction(intersects[0].object, true); 
+                    }
+                }
+            } 
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const deltaTime = globalClock.getDelta(); 
+            const elapsedTime = globalClock.getElapsedTime();
+            frameCount++;
+            
+            let wasdMoved = false;
+            if (isWDown || isSDown || isADown || isDDown || isZDown || isXDown) {
+                wasdMoved = true;
+                const moveDirection = new THREE.Vector3();
+                const rightDirection = new THREE.Vector3();
+                
+                camera.getWorldDirection(moveDirection);
+                rightDirection.crossVectors(camera.up, moveDirection).normalize(); 
+                const horizontalMoveDirection = moveDirection.clone();
+                horizontalMoveDirection.y = 0; 
+                horizontalMoveDirection.normalize();
+
+                const actualMoveSpeed = FREE_MOVE_SPEED * deltaTime;
+                let moveX = 0;
+                let moveZ = 0;
+                let moveY = 0;
+
+
+                if (isWDown) { 
+                    moveX += horizontalMoveDirection.x * actualMoveSpeed;
+                    moveZ += horizontalMoveDirection.z * actualMoveSpeed;
+                }
+                if (isSDown) { 
+                    moveX -= horizontalMoveDirection.x * actualMoveSpeed;
+                    moveZ -= horizontalMoveDirection.z * actualMoveSpeed;
+                }
+                if (isADown) {
+                    moveX += rightDirection.x * actualMoveSpeed;
+                    moveZ += rightDirection.z * actualMoveSpeed;
+                }
+                if (isDDown) {
+                    moveX -= rightDirection.x * actualMoveSpeed;
+                    moveZ -= rightDirection.z * actualMoveSpeed;
+                }
+                if (isZDown) { 
+                    moveY += actualMoveSpeed;
+                }
+                if (isXDown) { 
+                    moveY -= actualMoveSpeed;
+                }
+                
+                camera.position.x += moveX;
+                camera.position.z += moveZ;
+                camera.position.y += moveY;
+                controls.target.x += moveX;
+                controls.target.z += moveZ;
+                controls.target.y += moveY;
+
+
+                if (isFollowing) isFollowing = false;
+                targetLookAtForFocus = null;
+                targetCameraPositionForFocus = null;
+                updateInfoBox(); 
+            }
+
+            if (sunCorona) {
+                sunCorona.material.rotation += 0.001 * simulationSpeed;
+                sunCorona.material.opacity = 0.6 + Math.sin(elapsedTime * 0.5 * simulationSpeed) * 0.2; 
+            }
+
+            solarFlares.forEach(flare => {
+                if (!isPaused) {
+                    flare.userData.timer -= deltaTime * simulationSpeed;
+                    if (flare.userData.timer <= 0) {
+                        flare.userData.isActive = !flare.userData.isActive;
+                        flare.visible = flare.userData.isActive;
+                        if (flare.userData.isActive) {
+                            flare.scale.set(1, 0.1, 1); 
+                            flare.material.opacity = 0.8;
+                            flare.userData.timer = 2 + Math.random() * 8; 
+                            const phi = Math.random() * Math.PI * 2;
+                            const theta = (Math.random() - 0.5) * Math.PI;
+                            flare.position.setFromSphericalCoords(sunData.visualRadius * 1.05, phi, theta);
+                            flare.lookAt(sun.position);
+                            flare.rotateX(Math.PI / 2);
+                        } else {
+                             flare.userData.timer = 5 + Math.random() * 15; 
+                        }
+                    }
+
+                    if (flare.userData.isActive && flare.visible) {
+                        flare.scale.y = Math.min(flare.scale.y + 0.5 * simulationSpeed * deltaTime, 1); 
+                        flare.material.opacity = Math.max(0, flare.material.opacity - 0.1 * simulationSpeed * deltaTime); 
+                        if (flare.material.opacity <= 0) {
+                            flare.visible = false;
+                            flare.userData.isActive = false; 
+                            flare.userData.timer = 5 + Math.random() * 15; 
+                        }
+                    }
+                } else { 
+                    flare.visible = flare.userData.isActive;
+                }
+            });
+
+
+            if (!isPaused) {
+                planets.forEach(p => { 
+                    p.currentAngle += p.angularSpeedBase * simulationSpeed;
+                    let newPosVec = new THREE.Vector3(
+                        p.orbitalRadius * Math.cos(p.currentAngle),0,p.orbitalRadius * Math.sin(p.currentAngle)
+                    );
+                    newPosVec.applyAxisAngle(new THREE.Vector3(1, 0, 0), p.orbitalInclinationRad);
+                    p.mesh.position.copy(newPosVec);
+                    p.mesh.rotation.y += 0.005 * simulationSpeed; 
+                    p.moonObjects.forEach(m => {
+                        m.currentAngle += m.angularSpeedBase * simulationSpeed * MOON_SIMULATION_SPEED_MULTIPLIER;
+                        m.mesh.position.x = m.orbitalRadius * Math.cos(m.currentAngle);
+                        m.mesh.position.z = m.orbitalRadius * Math.sin(m.currentAngle);
+                        m.mesh.rotation.y += 0.01 * simulationSpeed * MOON_SIMULATION_SPEED_MULTIPLIER; 
+                        if (m.mesh.name === "Borg Cube") { 
+                            m.mesh.rotation.x += 0.003 * simulationSpeed * MOON_SIMULATION_SPEED_MULTIPLIER;
+                        }
+                        if (m.isSpaceship) {
+                            m.mesh.rotation.x += 0.005 * simulationSpeed * MOON_SIMULATION_SPEED_MULTIPLIER;
+                            m.mesh.rotation.z += 0.002 * simulationSpeed * MOON_SIMULATION_SPEED_MULTIPLIER;
+                        }
+                    });
+                });
+
+                asteroidBelts.forEach(belt => {
+                    belt.forEach(asteroid => {
+                        asteroid.userData.currentAngle += asteroid.userData.angularSpeedBase * simulationSpeed;
+                        let astPos = new THREE.Vector3(
+                            asteroid.userData.orbitalRadius * Math.cos(asteroid.userData.currentAngle),
+                            asteroid.userData.yOffset, 
+                            asteroid.userData.orbitalRadius * Math.sin(asteroid.userData.currentAngle)
+                        );
+                        astPos.applyAxisAngle(new THREE.Vector3(1,0,0), asteroid.userData.orbitalInclinationRad);
+                        asteroid.position.copy(astPos);
+                        asteroid.rotation.x += 0.01 * simulationSpeed;
+                        asteroid.rotation.y += 0.015 * simulationSpeed;
+                    });
+                });
+
+                comets.forEach(comet => {
+                    comet.currentAngle += comet.angularSpeedBase * simulationSpeed; 
+                    const cData = comet.data;
+                    const a = cData.semiMajorAxisAU * DISTANCE_SCALE_AU_TO_THREEJS;
+                    const e = cData.eccentricity;
+                    const E = comet.currentAngle; 
+                    const x_orb = a * (Math.cos(E) - e);
+                    const y_orb = a * Math.sqrt(1 - e * e) * Math.sin(E); 
+                    let posInOrbitalPlane = new THREE.Vector3(x_orb, 0, y_orb); 
+                    const incl = THREE.MathUtils.degToRad(cData.inclinationDegrees);
+                    const Omega = THREE.MathUtils.degToRad(cData.longitudeOfAscendingNodeDegrees);
+                    const omega_arg = THREE.MathUtils.degToRad(cData.argumentOfPeriapsisDegrees);
+                    let finalPos = new THREE.Vector3().copy(posInOrbitalPlane);
+                    finalPos.applyAxisAngle(new THREE.Vector3(0,0,1), omega_arg); 
+                    finalPos.applyAxisAngle(new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,0,1), omega_arg), incl); 
+                    finalPos.applyAxisAngle(new THREE.Vector3(0,1,0), Omega); 
+                    comet.mesh.position.copy(finalPos);
+
+                    if (frameCount % COMET_TRAIL_UPDATE_INTERVAL === 0) { 
+                        const sunPosition = sun.position; 
+                        const distanceToSunAU = comet.mesh.position.distanceTo(sunPosition) / DISTANCE_SCALE_AU_TO_THREEJS;
+
+                        if (distanceToSunAU < COMET_TRAIL_PROXIMITY_AU) {
+                            comet.trailPoints.push(comet.mesh.position.clone());
+                            if (comet.trailPoints.length > MAX_TRAIL_POINTS) {
+                                comet.trailPoints.shift(); 
+                            }
+                            if (comet.trailPoints.length > 1) {
+                                comet.trailMesh.geometry.setFromPoints(comet.trailPoints);
+                                comet.trailMesh.geometry.attributes.position.needsUpdate = true;
+                                comet.trailMesh.visible = true;
+                                comet.trailMesh.material.opacity = Math.max(0.1, 1 - (distanceToSunAU / COMET_TRAIL_PROXIMITY_AU) * 0.8);
+                            }
+                        } else {
+                            if (comet.trailPoints.length > 0) {
+                                comet.trailPoints.shift(); 
+                                if (comet.trailPoints.length > 1) {
+                                    comet.trailMesh.geometry.setFromPoints(comet.trailPoints);
+                                    comet.trailMesh.geometry.attributes.position.needsUpdate = true;
+                                } else {
+                                    comet.trailMesh.visible = false;
+                                }
+                            } else {
+                                comet.trailMesh.visible = false;
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (!wasdMoved) {
+                if (isFollowing && focusedObject) {
+                    const currentFollowTargetPos = focusedObject.getWorldPosition(new THREE.Vector3());
+                    controls.target.copy(currentFollowTargetPos); 
+
+                    const objectRadius = (focusedObject.userData.isPlanet || focusedObject.userData.name === "Sun")
+                                        ? (focusedObject.userData.name === "Sun" ? sunData.visualRadius : focusedObject.userData.visualRadius)
+                                        : (focusedObject.userData.isComet ? focusedObject.userData.visualRadius : 1);
+                    
+                    let mediumDistanceMultiplier;
+                    if (focusedObject.userData.name === "Sun") mediumDistanceMultiplier = 3.5;
+                    else if (focusedObject.userData.isPlanet) mediumDistanceMultiplier = 6;
+                    else if (focusedObject.userData.isComet) mediumDistanceMultiplier = 25;
+                    else mediumDistanceMultiplier = 10;
+                    
+                    const followDistance = objectRadius * mediumDistanceMultiplier;
+                    const directionToCamera = new THREE.Vector3().subVectors(camera.position, currentFollowTargetPos).normalize();
+                    const desiredCameraPosition = new THREE.Vector3().addVectors(currentFollowTargetPos, directionToCamera.multiplyScalar(followDistance));
+                    
+                    if (targetCameraPositionForFocus) { 
+                        camera.position.lerp(targetCameraPositionForFocus, 0.05);
+                        if (camera.position.distanceTo(targetCameraPositionForFocus) < 0.1) {
+                            targetCameraPositionForFocus = null; 
+                        }
+                    } else { 
+                         camera.position.lerp(desiredCameraPosition, 0.1); 
+                    }
+                    targetLookAtForFocus = null; 
+
+                } else if (targetLookAtForFocus) { 
+                    const lerpFactor = 0.05;
+                    controls.target.lerp(targetLookAtForFocus, lerpFactor);
+
+                    if (targetCameraPositionForFocus) {
+                        camera.position.lerp(targetCameraPositionForFocus, lerpFactor);
+                    }
+
+                    const targetReached = controls.target.distanceTo(targetLookAtForFocus) < 0.1;
+                    const positionReached = !targetCameraPositionForFocus || camera.position.distanceTo(targetCameraPositionForFocus) < 0.1;
+
+                    if (targetReached && positionReached) {
+                        controls.target.copy(targetLookAtForFocus); 
+                        if (targetCameraPositionForFocus) camera.position.copy(targetCameraPositionForFocus); 
+                        targetLookAtForFocus = null;
+                        targetCameraPositionForFocus = null;
+                    }
+                }
+            }
+            
+            if (focusedObject) {
+                 highlightMesh.position.copy(focusedObject.getWorldPosition(new THREE.Vector3()));
+                 if (!highlightMesh.visible) { 
+                    updateHighlightAndGeminiButton(); 
+                 }
+            } else if (highlightMesh.visible) {
+                highlightMesh.visible = false; 
+            }
+
+            controls.update(); 
+            renderer.render(scene, camera);
+        }
+
+        async function openInfoModal(type) { 
+            if (type === 'planet_comet') { 
+                if (!focusedObject || (!focusedObject.userData.isPlanet && focusedObject.userData.name !== "Sun" && !focusedObject.userData.isComet)) {
+                    modalBodyContent.innerHTML = "<p>No celestial body selected or data unavailable.</p>";
+                    modalTitle.textContent = "Error";
+                    geminiInfoModal.style.display = "flex";
+                    return;
+                }
+
+                const bodyName = focusedObject.userData.name;
+                modalTitle.textContent = `About ${bodyName}`;
+                modalBodyContent.innerHTML = '<p class="loading-indicator">✨ Asking Gemini for fascinating facts...</p>';
+                geminiInfoModal.style.display = "flex";
+
+                try {
+                    console.log(`Simulating API call to Gemini for ${bodyName}`);
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+                    let facts = "";
+                    switch (bodyName.toLowerCase()) {
+                        case "sun":
+                            facts = "The Sun is a G-type main-sequence star (G2V) – a yellow dwarf. It accounts for about 99.86% of the total mass of the Solar System. Its surface temperature is approximately 5,500 degrees Celsius (9,940 degrees Fahrenheit).";
+                            break;
+                        case "mercury":
+                            facts = "Mercury is the smallest planet in our solar system and closest to the Sun. It has a very thin atmosphere, called an exosphere, and experiences extreme temperature variations. Its orbit is the most inclined of the eight planets at 7 degrees.";
+                            break;
+                        case "venus":
+                            facts = "Venus is the second planet from the Sun and is Earth's closest planetary neighbor. It's the hottest planet in our solar system, with surface temperatures hot enough to melt lead, due to a runaway greenhouse effect. Its orbit is inclined by about 3.4 degrees.";
+                            break;
+                        case "earth":
+                            facts = "Earth is our home planet, the third from the Sun. It's the only known astronomical object to harbor life. About 71% of Earth's surface is water-covered, and the rest is land. Its orbital plane is the reference for the ecliptic (0 degrees inclination). It is currently under observation by a Borg Cube.";
+                            break;
+                        case "mars":
+                            facts = "Mars, the fourth planet from the Sun, is often called the 'Red Planet' due to its reddish appearance. It has the largest volcano and the deepest, longest canyon in our solar system. Its orbit is inclined by about 1.9 degrees.";
+                            break;
+                        case "jupiter":
+                            facts = "Jupiter is the fifth planet from the Sun and the largest in our solar system. It's a gas giant, primarily composed of hydrogen and helium, and is known for its Great Red Spot, a giant storm larger than Earth. Its orbit is inclined by about 1.3 degrees.";
+                            break;
+                        case "saturn":
+                            facts = "Saturn, the sixth planet from the Sun, is famous for its stunning ring system, made mostly of ice particles with some rocky debris and dust. It's another gas giant, with an orbital inclination of about 2.5 degrees.";
+                            break;
+                        case "uranus":
+                            facts = "Uranus is the seventh planet from the Sun and has a unique tilt, rotating on its side. It's an ice giant, with a bluish-green color due to methane in its atmosphere. Its orbit is inclined by about 0.8 degrees. Rumors suggest an Ashtar Command fleet is currently in orbit.";
+                            break;
+                        case "neptune":
+                            facts = "Neptune is the eighth and farthest-known planet from the Sun in our solar system. It's also an ice giant, known for its deep blue color and strong winds. Its orbit is inclined by about 1.8 degrees.";
+                            break;
+                        case "comet halley-type":
+                            facts = "This Halley-type comet is a celestial wanderer, known for its spectacular tail that grows as it nears the Sun. It's believed to originate from the distant Oort Cloud and has a highly elliptical orbit, bringing it back to the inner solar system periodically.";
+                            break;
+                        case "comet swift-tuttle-like":
+                            facts = "Similar to the parent body of the Perseid meteor shower, this comet follows a long, inclined path around the Sun. Its icy nucleus releases gas and dust, creating a visible coma and tail when heated by solar radiation.";
+                            break;
+                        default:
+                            facts = `No specific information available for ${bodyName} in this demo.`;
+                    }
+                    modalBodyContent.innerHTML = `<p>${facts}</p>`;
+                } catch (error) {
+                    console.error("Error fetching planet info (simulated):", error);
+                    modalBodyContent.innerHTML = "<p>Sorry, couldn't fetch information at this time. Please try again later.</p>";
+                }
+            } else if (type === 'controls') {
+                modalTitle.textContent = "Controls Help";
+                modalBodyContent.innerHTML = `
+                    <ul>
+                        <li><strong>WASD:</strong> Free Camera Movement (W/S Inverted)</li>
+                        <li><strong>Z / X:</strong> Move Camera Up / Down</li>
+                        <li><strong>Mouse Left-Click:</strong> Select / Center on Body</li>
+                        <li><strong>Mouse Wheel:</strong> Zoom In / Out</li>
+                        <li><strong>Mouse Middle-Drag:</strong> Pan Camera</li>
+                        <li><strong>Hold 'C' + Left-Drag:</strong> Rotate Camera around Target</li>
+                        <li><strong>'F':</strong> Toggle Follow Selected Body</li>
+                        <li><strong>Enter:</strong> Toggle Focus and Follow Selected Body (Medium Distance)</li>
+                        <li><strong>'[' / ']':</strong> Prev / Next Celestial Body (incl. Comets)</li>
+                        <li><strong>'O':</strong> Toggle Planet Orbit Lines Visibility</li>
+                        <li><strong>F1:</strong> Show This Controls Help</li>
+                        <li><strong>F2:</strong> Toggle Comet Selection Menu</li>
+                        <li><strong>Pause/Resume Button:</strong> Pause or Resume Simulation</li>
+                        <li><strong>Speed Up/Down Buttons:</strong> Adjust Simulation Speed</li>
+                        <li><strong>✨ Tell Me About... Button:</strong> Get Info on Selected Body</li>
+                        <li><strong>Toggle Fullscreen Button:</strong> Enter/Exit Fullscreen Mode</li>
+                    </ul>
+                `;
+                geminiInfoModal.style.display = "flex";
+            }
+        }
+
+        function toggleBrowserFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log("Fullscreen request failed or was denied by the user.");
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
