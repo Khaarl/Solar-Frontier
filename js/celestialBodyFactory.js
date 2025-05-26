@@ -1,7 +1,7 @@
 // js/celestialBodyFactory.js
 // Functions for creating sun, planets, moons, asteroids, comets.
 
-import * as THREE from 'three'; // Assuming THREE is global via CDN
+// THREE will be accessed as a global variable from the CDN script.
 import { sunData as configSunData, planetsData as configPlanetsData, asteroidBeltsData as configAsteroidBeltsData, cometsData as configCometsData, DISTANCE_SCALE_AU_TO_THREEJS } from './config.js';
 import { addObjectToScene, addOrbitLine, addSunLight, getScene, getOrbitLineMeshes, getOrbitLinesVisible, getPlanets, getComets, getAsteroidBelts } from './sceneManager.js'; // Assuming sceneManager exposes these
 

@@ -1,7 +1,7 @@
 // js/stationFactory.js
 // Functions for creating different station types.
 
-import * as THREE from 'three'; // Assuming THREE is global via CDN
+// THREE will be accessed as a global variable from the CDN script.
 import { stationsData as configStationsData, DISTANCE_SCALE_AU_TO_THREEJS } from './config.js';
 import { addObjectToScene, getStations as getGlobalStationsArray, getPlanets, getSun } from './sceneManager.js'; // Assuming sceneManager exposes these
 

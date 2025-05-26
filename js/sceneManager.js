@@ -2,9 +2,8 @@
 // Manages Three.js scene setup, camera, renderer, lighting, background stars,
 // and global scene-related variables.
 
-import * as THREE from 'three'; // Assuming THREE will be available globally via CDN for now
-// If using npm, you'd import directly: import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // If using npm
+// THREE will be accessed as a global variable from the CDN script.
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // If using npm for OrbitControls specifically
 
 // Global scene-related variables
 export let scene, camera, renderer, controls, globalClock;

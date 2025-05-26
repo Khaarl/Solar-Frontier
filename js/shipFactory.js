@@ -1,7 +1,7 @@
 // js/shipFactory.js
 // Functions for creating NPC ship meshes (Cargo, Passenger, Pirate).
 
-import * as THREE from 'three'; // Assuming THREE is global via CDN
+// THREE will be accessed as a global variable from the CDN script.
 
 // --- Generic Ship Component Functions ---
 function addEngineGlow(group, position, size, color = 0xFFFFAA) {

@@ -1,7 +1,7 @@
 // js/shipLogic.js
 // Manages NPC ship spawning, movement, status updates, and name generation.
 
-import * as THREE from 'three'; // Assuming THREE is global via CDN
+// THREE will be accessed as a global variable from the CDN script.
 import { MAX_ACTIVE_SHIPS, SHIP_SPAWN_INTERVAL, SHIP_DOCK_TIME, DISTANCE_SCALE_AU_TO_THREEJS, SHIP_NAME_PREFIXES, SHIP_NAME_CORES_CARGO, SHIP_NAME_CORES_PASSENGER, SHIP_NAME_CORES_PIRATE, SHIP_NAME_SUFFIXES } from './config.js';
 import { createCargoShipMesh, createPassengerShipMesh, createPirateShipMesh } from './shipFactory.js';
 import { addObjectToScene, removeObjectFromScene, getGlobalClock, getActiveShips as getGlobalActiveShipsArray, getStations as getGlobalStationsArray, getFocusedObject, setFocusedObject, getHighlightMesh } from './sceneManager.js';

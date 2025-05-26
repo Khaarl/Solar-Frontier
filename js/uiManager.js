@@ -115,7 +115,7 @@ export function updateHighlightAndGeminiButton() {
     if (!highlight || !geminiPlanetInfoButton) return;
 
     if (focusedObj && (focusedObj.userData.isPlanet || focusedObj.userData.name === "Sun" || focusedObj.userData.isComet || focusedObj.userData.isMoon || focusedObj.userData.isStation || focusedObj.userData.isShip)) {
-        highlight.position.copy(focusedObj.getWorldPosition(new THREE.Vector3()));
+        highlight.position.copy(focusedObj.getWorldPosition(new window.THREE.Vector3())); // Use window.THREE
         const scaleFactor = getObjectVisualRadius(focusedObj); // This function needs to be accessible or replicated
         const scale = scaleFactor * (focusedObj.userData.isShip ? 3.5 : 1.6);
         highlight.scale.set(scale, scale, scale);
@@ -450,7 +450,7 @@ export function openShipOverviewModalUI() { // Renamed to avoid conflict if orig
             let etaText = "N/A";
             if (ship.status === "TRAVELLING" || ship.status === "DEPARTING" || ship.status === "APPROACHING") {
                 if (ship.speed > 0 && simSpeed > 0 && ship.mesh && ship.destinationStation.mesh) {
-                    const destPos = ship.destinationStation.mesh.getWorldPosition(new THREE.Vector3());
+                    const destPos = ship.destinationStation.mesh.getWorldPosition(new window.THREE.Vector3()); // Use window.THREE
                     const remainingDist = ship.mesh.position.distanceTo(destPos);
                     const etaSimSeconds = remainingDist / (ship.speed * simSpeed); // speed is already scaled by DISTANCE_SCALE_AU_TO_THREEJS
                     etaText = `${etaSimSeconds.toFixed(0)}s`;

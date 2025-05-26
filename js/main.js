@@ -1,6 +1,6 @@
 // Main application entry point for Solar Frontier
 
-import * as THREE from 'three'; // Assuming THREE is available globally via CDN for now
+// THREE will be accessed as a global variable from the CDN script.
 import * as Config from './config.js';
 import * as Utils from './utils.js';
 import * as SceneManager from './sceneManager.js';
@@ -154,8 +154,8 @@ function updateCelestialBodies(effectiveDeltaTime) {
         let E = M; for (let i = 0; i < 5; i++) { E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E)); }
         const v = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
         const r = a * (1 - e * e) / (1 + e * Math.cos(v));
-        let newPosVec = new THREE.Vector3(r * Math.cos(v), 0, r * Math.sin(v));
-        newPosVec.applyAxisAngle(new THREE.Vector3(1, 0, 0), p.orbitalInclinationRad);
+        let newPosVec = new window.THREE.Vector3(r * Math.cos(v), 0, r * Math.sin(v));
+        newPosVec.applyAxisAngle(new window.THREE.Vector3(1, 0, 0), p.orbitalInclinationRad);
         p.mesh.position.copy(newPosVec);
         p.mesh.rotation.y += 0.005 * simulationSpeed;
 
@@ -174,8 +174,8 @@ function updateCelestialBodies(effectiveDeltaTime) {
         belt.children.forEach(asteroid => { // Iterate over actual asteroid meshes
             if (asteroid.userData.isAsteroid) {
                 asteroid.userData.currentAngle += asteroid.userData.angularSpeedBase * simulationSpeed;
-                let astPos = new THREE.Vector3(asteroid.userData.orbitalRadius * Math.cos(asteroid.userData.currentAngle), asteroid.userData.yOffset, asteroid.userData.orbitalRadius * Math.sin(asteroid.userData.currentAngle));
-                astPos.applyAxisAngle(new THREE.Vector3(1,0,0), asteroid.userData.orbitalInclinationRad);
+                let astPos = new window.THREE.Vector3(asteroid.userData.orbitalRadius * Math.cos(asteroid.userData.currentAngle), asteroid.userData.yOffset, asteroid.userData.orbitalRadius * Math.sin(asteroid.userData.currentAngle));
+                astPos.applyAxisAngle(new window.THREE.Vector3(1,0,0), asteroid.userData.orbitalInclinationRad);
                 asteroid.position.copy(astPos);
                 asteroid.rotation.x += 0.01 * simulationSpeed; asteroid.rotation.y += 0.015 * simulationSpeed;
             }
@@ -189,12 +189,12 @@ function updateCelestialBodies(effectiveDeltaTime) {
         const cData = comet.data; const a = cData.semiMajorAxisAU * Config.DISTANCE_SCALE_AU_TO_THREEJS; const e = cData.eccentricity; const M = comet.currentAngle;
         let E = M; for(let i=0; i<5; i++) { E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));}
         const x_orb = a * (Math.cos(E) - e); const y_orb = a * Math.sqrt(1 - e * e) * Math.sin(E);
-        let posInOrbitalPlane = new THREE.Vector3(x_orb, 0, y_orb);
-        const incl = THREE.MathUtils.degToRad(cData.inclinationDegrees); const Omega = THREE.MathUtils.degToRad(cData.longitudeOfAscendingNodeDegrees); const omega_arg = THREE.MathUtils.degToRad(cData.argumentOfPeriapsisDegrees);
-        let q = new THREE.Quaternion(); let finalPos = new THREE.Vector3().copy(posInOrbitalPlane);
-        q.setFromAxisAngle(new THREE.Vector3(0,1,0), omega_arg); finalPos.applyQuaternion(q); // Mistake in original, should be Z for orbital plane
-        q.setFromAxisAngle(new THREE.Vector3(1,0,0), incl); finalPos.applyQuaternion(q);
-        q.setFromAxisAngle(new THREE.Vector3(0,1,0), Omega); finalPos.applyQuaternion(q);
+        let posInOrbitalPlane = new window.THREE.Vector3(x_orb, 0, y_orb);
+        const incl = window.THREE.MathUtils.degToRad(cData.inclinationDegrees); const Omega = window.THREE.MathUtils.degToRad(cData.longitudeOfAscendingNodeDegrees); const omega_arg = window.THREE.MathUtils.degToRad(cData.argumentOfPeriapsisDegrees);
+        let q = new window.THREE.Quaternion(); let finalPos = new window.THREE.Vector3().copy(posInOrbitalPlane);
+        q.setFromAxisAngle(new window.THREE.Vector3(0,1,0), omega_arg); finalPos.applyQuaternion(q); // Mistake in original, should be Z for orbital plane
+        q.setFromAxisAngle(new window.THREE.Vector3(1,0,0), incl); finalPos.applyQuaternion(q);
+        q.setFromAxisAngle(new window.THREE.Vector3(0,1,0), Omega); finalPos.applyQuaternion(q);
         comet.mesh.position.copy(finalPos);
 
         if (Math.floor(frameCount) % Config.COMET_TRAIL_UPDATE_INTERVAL === 0) {
@@ -225,9 +225,9 @@ function updateStations(effectiveDeltaTime) {
 
     stations.forEach(s => {
         s.currentAngle += s.angularSpeedBase * simulationSpeed; // Use global simulationSpeed
-        let newStationPos = new THREE.Vector3(s.orbitalRadius * Math.cos(s.currentAngle), 0, s.orbitalRadius * Math.sin(s.currentAngle));
+        let newStationPos = new window.THREE.Vector3(s.orbitalRadius * Math.cos(s.currentAngle), 0, s.orbitalRadius * Math.sin(s.currentAngle));
         if (s.parentMesh === SceneManager.getSun() && s.orbitalInclinationRad) {
-            newStationPos.applyAxisAngle(new THREE.Vector3(1,0,0), s.orbitalInclinationRad);
+            newStationPos.applyAxisAngle(new window.THREE.Vector3(1,0,0), s.orbitalInclinationRad);
         }
 
         if (s.parentMesh && s.parentMesh !== SceneManager.getSun()) {
@@ -251,7 +251,7 @@ function updateStations(effectiveDeltaTime) {
 function handleCameraFollowAndFocus(camera, orbitControls) {
     const focusedObj = SceneManager.getFocusedObject();
     if (isFollowing && focusedObj) {
-        const currentFollowTargetPos = focusedObj.getWorldPosition(new THREE.Vector3());
+        const currentFollowTargetPos = focusedObj.getWorldPosition(new window.THREE.Vector3());
         if(orbitControls) orbitControls.target.copy(currentFollowTargetPos);
 
         const objectRadius = Utils.getObjectVisualRadius(focusedObj);
@@ -261,9 +261,9 @@ function handleCameraFollowAndFocus(camera, orbitControls) {
                                        focusedObj.userData.isStation ? 5 :
                                        focusedObj.userData.isShip ? 20 : 10;
         const followDistance = objectRadius * mediumDistanceMultiplier;
-        const directionToCamera = new THREE.Vector3().subVectors(camera.position, currentFollowTargetPos).normalize();
+        const directionToCamera = new window.THREE.Vector3().subVectors(camera.position, currentFollowTargetPos).normalize();
         if (directionToCamera.lengthSq() === 0) directionToCamera.set(0,0.5,1).normalize(); // Default if camera is at target
-        const desiredCameraPosition = new THREE.Vector3().addVectors(currentFollowTargetPos, directionToCamera.multiplyScalar(followDistance));
+        const desiredCameraPosition = new window.THREE.Vector3().addVectors(currentFollowTargetPos, directionToCamera.multiplyScalar(followDistance));
         
         if (SceneManager.targetCameraPositionForFocus) {
             camera.position.lerp(SceneManager.targetCameraPositionForFocus, 0.05);
@@ -322,7 +322,7 @@ function selectObjectByInteraction(objectToSelect, maintainCameraDirection = tru
     }
 
     if (!(Controls.isWDown || Controls.isSDown || Controls.isADown || Controls.isDDown || Controls.isZDown || Controls.isXDown)) {
-        SceneManager.targetLookAtForFocus = focusedObj.getWorldPosition(new THREE.Vector3());
+        SceneManager.targetLookAtForFocus = focusedObj.getWorldPosition(new window.THREE.Vector3());
         const objectRadius = Utils.getObjectVisualRadius(focusedObj);
         let offsetDistance = objectRadius * 5;
         if (focusedObj.userData.name === "Sun") offsetDistance = objectRadius * 3;
@@ -333,11 +333,11 @@ function selectObjectByInteraction(objectToSelect, maintainCameraDirection = tru
 
         const camera = SceneManager.getCamera();
         if (maintainCameraDirection) {
-            const direction = new THREE.Vector3();
+            const direction = new window.THREE.Vector3();
             camera.getWorldDirection(direction);
-            SceneManager.targetCameraPositionForFocus = new THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance));
+            SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance));
         } else {
-            SceneManager.targetCameraPositionForFocus = new THREE.Vector3(
+            SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3(
                 SceneManager.targetLookAtForFocus.x,
                 SceneManager.targetLookAtForFocus.y + offsetDistance * 0.7,
                 SceneManager.targetLookAtForFocus.z + offsetDistance * 0.7
@@ -368,14 +368,14 @@ function toggleFollow() {
     isFollowing = !isFollowing;
     const focusedObj = SceneManager.getFocusedObject();
     if (isFollowing && focusedObj) {
-        SceneManager.targetLookAtForFocus = focusedObj.getWorldPosition(new THREE.Vector3());
+        SceneManager.targetLookAtForFocus = focusedObj.getWorldPosition(new window.THREE.Vector3());
         const objectRadius = Utils.getObjectVisualRadius(focusedObj);
         let offsetDistance = objectRadius * (focusedObj.userData.name === "Sun" ? 2.5 : focusedObj.userData.isShip ? 15 : 4);
-        const direction = new THREE.Vector3();
+        const direction = new window.THREE.Vector3();
         SceneManager.getCamera().getWorldDirection(direction);
-        SceneManager.targetCameraPositionForFocus = new THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance));
+        SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance));
     } else if (!isFollowing) {
-        SceneManager.targetCameraPositionForFocus = null; 
+        SceneManager.targetCameraPositionForFocus = null;
         // targetLookAtForFocus might still be set if user just clicked, that's fine.
     }
     updateOverallInfoBoxState();
@@ -391,7 +391,7 @@ function toggleFocusAndFollow() {
         } else { // Not following, or following something else: Start following this object
             isFollowing = true;
             const orbitControls = SceneManager.getControls();
-            if(orbitControls) orbitControls.target.copy(focusedObj.getWorldPosition(new THREE.Vector3()));
+            if(orbitControls) orbitControls.target.copy(focusedObj.getWorldPosition(new window.THREE.Vector3()));
             
             const objectRadius = Utils.getObjectVisualRadius(focusedObj);
             let mediumDistanceMultiplier = focusedObj.userData.name === "Sun" ? 3.5 :
@@ -401,12 +401,12 @@ function toggleFocusAndFollow() {
                                            focusedObj.userData.isShip ? 20 : 10;
             const followDistance = objectRadius * mediumDistanceMultiplier;
             const camera = SceneManager.getCamera();
-            const directionFromObjectToCamera = new THREE.Vector3().subVectors(camera.position, orbitControls.target).normalize();
-             if (directionFromObjectToCamera.lengthSq() === 0) { 
+            const directionFromObjectToCamera = new window.THREE.Vector3().subVectors(camera.position, orbitControls.target).normalize();
+             if (directionFromObjectToCamera.lengthSq() === 0) {
                 camera.getWorldDirection(directionFromObjectToCamera);
                 directionFromObjectToCamera.negate();
             }
-            SceneManager.targetCameraPositionForFocus = new THREE.Vector3().addVectors(orbitControls.target, directionFromObjectToCamera.multiplyScalar(followDistance));
+            SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3().addVectors(orbitControls.target, directionFromObjectToCamera.multiplyScalar(followDistance));
             SceneManager.targetLookAtForFocus = null; // LookAt is handled by controls.target when following
         }
         updateOverallInfoBoxState();
