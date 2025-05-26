@@ -34,7 +34,16 @@ export let playerData = { // Note: This is stateful, might be better managed els
     cargoHold: [],
     maxCargo: 20,
     passengers: [],
-    maxPassengers: 4
+    maxPassengers: 4,
+playerShip: {
+        type: 'LightFreighter', // Example type
+        name: 'Stardust Wanderer', // Example name
+        cargoCapacity: 50,
+        currentCargo: 0, // Will mirror cargoHold.length or sum of quantities
+        fuel: 100, // Max fuel
+        currentFuel: 100,
+        // Other ship-specific stats can be added here later (e.g., speed, maneuverability, hull strength)
+    },
 };
 
 export const sunData = { name: 'Sun', color: 0xFFFF00, visualRadius: 15 };

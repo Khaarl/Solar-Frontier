@@ -14,6 +14,10 @@ export let isADown = false;
 export let isDDown = false;
 export let isZDown = false;
 export let isXDown = false;
+export let isArrowUp = false;
+export let isArrowDown = false;
+export let isArrowLeft = false;
+export let isArrowRight = false;
 
 // Callbacks to be set by main.js or another coordinator
 let _selectObjectByInteractionCallback;
@@ -27,6 +31,7 @@ let _openShipOverviewModalCallback;
 let _updateInfoBoxCallback;
 let _setCameraTargetsCallback; // For (null, null) on free move
 let _toggleOrbitLinesCallback;
+let _showMainMenuCallback;
 
 export function initControls(callbacks) {
     _selectObjectByInteractionCallback = callbacks.selectObjectByInteraction;
@@ -39,6 +44,7 @@ export function initControls(callbacks) {
     _openShipOverviewModalCallback = callbacks.openShipOverviewModal;
     _updateInfoBoxCallback = callbacks.updateInfoBox;
     _setCameraTargetsCallback = callbacks.setCameraTargets;
+_showMainMenuCallback = callbacks.showMainMenu;
     _toggleOrbitLinesCallback = callbacks.toggleOrbitLines;
 
 
@@ -90,7 +96,7 @@ function onKeyDown(event) {
     const key = event.key.toLowerCase();
     const orbitControls = getOrbitControls();
 
-    if ((key.startsWith('f') && key !== 'f12') || key === 'enter' || key === 'r') {
+    if ((key.startsWith('f') && key !== 'f12') || key === 'enter' || key === 'r' || key.startsWith('arrow')) {
         event.preventDefault();
     }
 
@@ -131,10 +137,17 @@ function onKeyDown(event) {
             if (_openMarketModalForStationCallback) _openMarketModalForStationCallback();
             break;
         case 'f4':
+case 'escape':
+            if (_showMainMenuCallback) _showMainMenuCallback();
+            break;
             if (_openShipOverviewModalCallback) _openShipOverviewModalCallback();
             break;
+        case 'arrowup': isArrowUp = true; break;
+        case 'arrowdown': isArrowDown = true; break;
+        case 'arrowleft': isArrowLeft = true; break;
+        case 'arrowright': isArrowRight = true; break;
     }
-    // If any movement key is pressed, update info box and potentially clear camera targets
+    // If any camera movement key is pressed, update info box and potentially clear camera targets
     if (isWDown || isSDown || isADown || isDDown || isZDown || isXDown) {
         if(_updateInfoBoxCallback) _updateInfoBoxCallback(); // Let main logic decide text
         if(_setCameraTargetsCallback) _setCameraTargetsCallback(null, null, false); // Clear follow/focus, set isFollowing to false
@@ -143,7 +156,11 @@ function onKeyDown(event) {
 
 function onKeyUp(event) {
     const orbitControls = getOrbitControls();
-    switch(event.key.toLowerCase()) {
+    const key = event.key.toLowerCase();
+    if (key.startsWith('arrow')) {
+        event.preventDefault();
+    }
+    switch(key) {
         case 'c': 
             isCKeyDown = false; 
             if(orbitControls) orbitControls.enableRotate = false; 
@@ -154,6 +171,10 @@ function onKeyUp(event) {
         case 'd': isDDown = false; break;
         case 'z': isZDown = false; break;
         case 'x': isXDown = false; break;
+        case 'arrowup': isArrowUp = false; break;
+        case 'arrowdown': isArrowDown = false; break;
+        case 'arrowleft': isArrowLeft = false; break;
+        case 'arrowright': isArrowRight = false; break;
     }
 }
 
@@ -196,6 +217,52 @@ export function handleFreeCameraMovement(deltaTime, camera, orbitControls, _upda
     if (_updateInfoBoxCallbackFromMain) _updateInfoBoxCallbackFromMain();
     if (_setCameraTargetsCallbackFromMain) _setCameraTargetsCallbackFromMain(null, null, false); // Clear follow/focus
 
+    return true; // Movement occurred
+}
+
+// Handles player ship movement based on arrow key states
+export function handlePlayerShipMovement(deltaTime, playerShip) {
+    if (!playerShip || !(isArrowUp || isArrowDown || isArrowLeft || isArrowRight)) {
+        // If no player ship or no movement keys are pressed, do nothing
+        if (playerShip && playerShip.userData.engineGlow) {
+            playerShip.userData.engineGlow.visible = false; // Turn off engine glow if not thrusting
+        }
+        return false;
+    }
+
+    const rotationSpeed = 1.5; // Radians per second
+    const thrustPower = 25.0;   // Units per second
+    const reversePower = 10.0; // Units per second
+
+    let appliedThrust = false;
+
+    // Handle rotation (yaw)
+    if (isArrowLeft) {
+        playerShip.rotateY(rotationSpeed * deltaTime);
+    }
+    if (isArrowRight) {
+        playerShip.rotateY(-rotationSpeed * deltaTime);
+    }
+
+    // Handle forward/backward thrust
+    // Movement is along the ship's local Z-axis (forward)
+    const moveDirection = new THREE.Vector3(0, 0, -1); // Forward is -Z in local space for lookAt
+    moveDirection.applyQuaternion(playerShip.quaternion); // Transform to world space
+
+    if (isArrowUp) {
+        playerShip.position.addScaledVector(moveDirection, thrustPower * deltaTime);
+        appliedThrust = true;
+    }
+    if (isArrowDown) {
+        playerShip.position.addScaledVector(moveDirection, -reversePower * deltaTime); // Negative for reverse
+        appliedThrust = true;
+    }
+
+    // Engine glow visibility
+    if (playerShip.userData.engineGlow) {
+        playerShip.userData.engineGlow.visible = appliedThrust;
+    }
+    
     return true; // Movement occurred
 }
 

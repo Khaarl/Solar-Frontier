@@ -8,6 +8,7 @@ import * as UIManager from './uiManager.js';
 import * as Controls from './controls.js';
 import * as CelestialBodyFactory from './celestialBodyFactory.js';
 import * as StationFactory from './stationFactory.js';
+import * as ShipFactory from './shipFactory.js'; // For player ship
 // ShipFactory is used by ShipLogic, not directly by main.js for now
 import * as ShipLogic from './shipLogic.js';
 import * as EconomyManager from './economyManager.js';
@@ -18,6 +19,7 @@ console.log("Main.js loaded - Attempting to initialize Solar Frontier");
 let isPaused = false;
 let simulationSpeed = 0.1; // Initial simulation speed
 let isFollowing = false; // Camera follow state
+let playerShipMesh = null; // To hold the player's ship object
 let currentSelectableObjectIndex = 0; // For cycling through objects
 
 // --- Main Initialization Function ---
@@ -60,6 +62,7 @@ function init() {
         updateInfoBox: updateOverallInfoBoxState,
         setCameraTargets: SceneManager.setFocusedObject, // Simplified: directly set focused object in sceneManager
         toggleOrbitLines: SceneManager.toggleOrbitLinesVisibility,
+showMainMenu: UIManager.showMainMenu,
     });
 
     // 4. Initialize Economy Manager (sets up markets, passenger terminals)
@@ -82,6 +85,22 @@ function init() {
     CelestialBodyFactory.createPlanetsAndMoons();
     CelestialBodyFactory.createAsteroidBelts();
     CelestialBodyFactory.createComets();
+// 6.5. Create Player Ship
+    playerShipMesh = ShipFactory.createPlayerShipMesh();
+    playerShipMesh.userData = {
+        isPlayerShip: true,
+        isShip: true, // For existing selection/highlight logic
+        name: Config.playerData.playerShip.name || "Player Ship",
+        displayName: Config.playerData.playerShip.name || "Player Ship", // For UI
+        type: Config.playerData.playerShip.type || "LightFreighter",
+        // Add other relevant player ship data from Config.playerData.playerShip if needed
+        engineGlow: playerShipMesh.userData.engineGlow // Preserve from factory
+    };
+    SceneManager.addObjectToScene(playerShipMesh, true, true); // Clickable, Selectable
+    playerShipMesh.position.set(0, 5, 50); // Initial position
+    // Rotate it to face a certain direction, e.g., towards origin
+    playerShipMesh.lookAt(0, 0, 0); 
+    console.log("Player ship created:", playerShipMesh.userData.name);
     StationFactory.createStations(); // This will use data from config.js and add to sceneManager's arrays
 
     // 7. Initialize Economy (after stations are created)
@@ -91,12 +110,30 @@ function init() {
     UIManager.populateObjectSelectionMenu(); // Populate with initial objects
 
     // 9. Set initial focus
-    const orderedSelectableObjects = SceneManager.getOrderedSelectableObjects();
-    if (orderedSelectableObjects.length > 0) {
-        selectObjectByInteraction(orderedSelectableObjects[0]);
-        currentSelectableObjectIndex = 0;
+    if (playerShipMesh) {
+        selectObjectByInteraction(playerShipMesh);
+        const orderedObjects = SceneManager.getOrderedSelectableObjects();
+        currentSelectableObjectIndex = orderedObjects.findIndex(obj => obj === playerShipMesh);
+        // If playerShipMesh is not in orderedObjects (e.g., not made selectable), findIndex is -1.
+        // Fallback to 0 or first available object if player ship isn't selectable for some reason.
+        if (currentSelectableObjectIndex === -1) {
+            console.warn("Player ship mesh not found in selectable objects array for focus indexing. Defaulting focus.");
+            if (orderedObjects.length > 0) {
+                selectObjectByInteraction(orderedObjects[0]);
+                currentSelectableObjectIndex = 0;
+            } else {
+                updateOverallInfoBoxState(); // No objects to select
+            }
+        }
     } else {
-        updateOverallInfoBoxState();
+        // Original fallback logic if no player ship
+        const orderedSelectableObjects = SceneManager.getOrderedSelectableObjects();
+        if (orderedSelectableObjects.length > 0) {
+            selectObjectByInteraction(orderedSelectableObjects[0]);
+            currentSelectableObjectIndex = 0;
+        } else {
+            updateOverallInfoBoxState();
+        }
     }
     
     console.log("Solar Frontier Initialization Complete.");
@@ -116,6 +153,17 @@ function animate() {
         EconomyManager.updateEconomy(isPaused); // Economy updates (includes passenger refresh checks)
         ShipLogic.manageShipPopulation(isPaused); // Manage ship spawning
         ShipLogic.updateShips(deltaTime, effectiveDeltaTime, isPaused); // Update ship positions and states
+// Update Player Ship
+        if (playerShipMesh) {
+            const playerMoved = Controls.handlePlayerShipMovement(deltaTime, playerShipMesh);
+            // If player ship moved, we might want to update camera to follow it,
+            // or ensure free camera movement is temporarily overridden.
+            // For now, if player ship is focused and followed, handleCameraFollowAndFocus should adapt.
+            // If player ship moved, and it's the focused object, update the info box.
+            if (playerMoved && SceneManager.getFocusedObject() === playerShipMesh) {
+                updateOverallInfoBoxState(); // Update info box if player ship moved
+            }
+        }
 
         // Update celestial bodies (planets, moons, asteroids, comets)
         updateCelestialBodies(effectiveDeltaTime);

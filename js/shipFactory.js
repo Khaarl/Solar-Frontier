@@ -160,5 +160,40 @@ export function createPirateShipMesh() {
     console.log("Pirate ship mesh created (enhanced)");
     return group;
 }
+// --- Player Ship (Light Freighter) ---
+export function createPlayerShipMesh() {
+    const group = new THREE.Group();
+    const shipLength = 0.9; // Slightly smaller than standard cargo
+    const shipWidth = 0.4;
+    const shipHeight = 0.3;
+
+    // Main hull
+    const hullMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50, metalness: 0.5, roughness: 0.6 }); // Greenish
+    const mainHullGeom = new THREE.BoxGeometry(shipLength * 0.7, shipHeight, shipWidth);
+    const mainHullMesh = new THREE.Mesh(mainHullGeom, hullMaterial);
+    mainHullMesh.position.x = -shipLength * 0.1;
+    group.add(mainHullMesh);
+    addWireframe(group, mainHullGeom, 0x81C784, mainHullMesh.position);
+
+    // Forward "command" module
+    const commandMaterial = new THREE.MeshStandardMaterial({ color: 0xA5D6A7, metalness: 0.4, roughness: 0.5 });
+    const commandGeom = new THREE.BoxGeometry(shipLength * 0.25, shipHeight * 0.7, shipWidth * 0.6);
+    const commandMesh = new THREE.Mesh(commandGeom, commandMaterial);
+    commandMesh.position.set(shipLength * 0.35, shipHeight * 0.05, 0);
+    group.add(commandMesh);
+    addWireframe(group, commandGeom, 0xC8E6C9, commandMesh.position);
+    
+    // Single, slightly larger central cargo container visual
+    const containerMaterial = new THREE.MeshStandardMaterial({ color: 0x66BB6A, metalness: 0.4, roughness: 0.7 });
+    const containerGeom = new THREE.BoxGeometry(shipLength * 0.25, shipHeight * 0.85, shipWidth * 0.45);
+    const centralContainer = new THREE.Mesh(containerGeom, containerMaterial);
+    centralContainer.position.set(-shipLength * 0.15, 0, 0); // Centered
+    group.add(centralContainer);
+    addWireframe(group, containerGeom, 0xA5D6A7, centralContainer.position);
+    
+    group.userData.engineGlow = addEngineGlow(group, new THREE.Vector3(-shipLength / 2 - 0.08, 0, 0), shipHeight * 0.4, 0xABEBC6); // Light green glow
+    console.log("Player ship mesh (LightFreighter) created");
+    return group;
+}
 
 console.log("shipFactory.js loaded");
