@@ -200,6 +200,13 @@ export function getRaycaster() { return raycaster; }
 export function getMouse() { return mouse; }
 export function getFocusedObject() { return focusedObject; }
 export function setFocusedObject(obj) { focusedObject = obj; }
+export function setTargetCameraPositionForFocus(pos) {
+    targetCameraPositionForFocus = pos;
+}
+
+export function setTargetLookAtForFocus(target) {
+    targetLookAtForFocus = target;
+}
 export function getHighlightMesh() { return highlightMesh; }
 export function getClickableObjects() { return clickableObjects; }
 export function getOrderedSelectableObjects() { return orderedSelectableObjects; }

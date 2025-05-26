@@ -90,7 +90,7 @@ function onKeyDown(event) {
     const key = event.key.toLowerCase();
     const orbitControls = getOrbitControls();
 
-    if (key.startsWith('f') || key === 'enter' || key === 'r') {
+    if ((key.startsWith('f') && key !== 'f12') || key === 'enter' || key === 'r') {
         event.preventDefault();
     }
 

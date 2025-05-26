@@ -88,10 +88,19 @@ with socketserver.TCPServer(("", PORT), NoCacheHandler) as httpd: # Use NoCacheH
 
     open_chrome_with_debugging(server_url, CHROME_PATH)
 
+    print("Starting httpd.serve_forever()...")
     try:
         httpd.serve_forever()
+        print("httpd.serve_forever() exited normally.") # Should not happen in normal operation
     except KeyboardInterrupt:
-        print("\nServer stopped.")
+        print("\nServer stopped by KeyboardInterrupt.")
+    except Exception as e:
+        print(f"Exception in serve_forever loop: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
+        print("Entering server cleanup (finally block)...")
+        print("Calling httpd.shutdown()...")
         httpd.shutdown()
+        print("httpd.shutdown() completed.")
         cleanup_temp_chrome_profile()

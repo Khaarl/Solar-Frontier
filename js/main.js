@@ -127,8 +127,8 @@ function animate() {
     const orbitControls = SceneManager.getControls(); // Assuming sceneManager.getControls() returns orbit controls
     
     const movedByWASD = Controls.handleFreeCameraMovement(deltaTime, camera, orbitControls, updateOverallInfoBoxState, (target, pos, followingState) => {
-        SceneManager.targetLookAtForFocus = target;
-        SceneManager.targetCameraPositionForFocus = pos;
+        SceneManager.setTargetLookAtForFocus(target);
+        SceneManager.setTargetCameraPositionForFocus(pos);
         isFollowing = followingState; // Update main's isFollowing state
     });
 
@@ -172,7 +172,7 @@ function startNewGame() {
 }
 
 function updateCelestialBodies(effectiveDeltaTime) {
-    const planets = SceneManager.getPlanets();
+    const planets = SceneManager.planets;
     const comets = SceneManager.comets; // Changed from getComets()
     const asteroidBelts = SceneManager.asteroidBelts; // Changed from getAsteroidBelts()
 
@@ -296,11 +296,11 @@ function handleCameraFollowAndFocus(camera, orbitControls) {
         
         if (SceneManager.targetCameraPositionForFocus) {
             camera.position.lerp(SceneManager.targetCameraPositionForFocus, 0.05);
-            if (camera.position.distanceTo(SceneManager.targetCameraPositionForFocus) < 0.1) SceneManager.targetCameraPositionForFocus = null;
+            if (camera.position.distanceTo(SceneManager.targetCameraPositionForFocus) < 0.1) SceneManager.setTargetCameraPositionForFocus(null);
         } else {
             camera.position.lerp(desiredCameraPosition, 0.1);
         }
-        SceneManager.targetLookAtForFocus = null; 
+        SceneManager.setTargetLookAtForFocus(null); 
     } else if (SceneManager.targetLookAtForFocus) {
         const lerpFactor = 0.05;
         if(orbitControls) orbitControls.target.lerp(SceneManager.targetLookAtForFocus, lerpFactor);
@@ -312,7 +312,7 @@ function handleCameraFollowAndFocus(camera, orbitControls) {
         if (targetReached && positionReached) {
             if(orbitControls) orbitControls.target.copy(SceneManager.targetLookAtForFocus);
             if (SceneManager.targetCameraPositionForFocus) camera.position.copy(SceneManager.targetCameraPositionForFocus);
-            SceneManager.targetLookAtForFocus = null; SceneManager.targetCameraPositionForFocus = null;
+            SceneManager.setTargetLookAtForFocus(null); SceneManager.setTargetCameraPositionForFocus(null);
         }
     }
 }
@@ -351,7 +351,7 @@ function selectObjectByInteraction(objectToSelect, maintainCameraDirection = tru
     }
 
     if (!(Controls.isWDown || Controls.isSDown || Controls.isADown || Controls.isDDown || Controls.isZDown || Controls.isXDown)) {
-        SceneManager.targetLookAtForFocus = focusedObj.getWorldPosition(new window.THREE.Vector3());
+        SceneManager.setTargetLookAtForFocus(focusedObj.getWorldPosition(new window.THREE.Vector3()));
         const objectRadius = Utils.getObjectVisualRadius(focusedObj);
         let offsetDistance = objectRadius * 5;
         if (focusedObj.userData.name === "Sun") offsetDistance = objectRadius * 3;
@@ -364,7 +364,7 @@ function selectObjectByInteraction(objectToSelect, maintainCameraDirection = tru
         if (maintainCameraDirection) {
             const direction = new window.THREE.Vector3();
             camera.getWorldDirection(direction);
-            SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance));
+            SceneManager.setTargetCameraPositionForFocus(new window.THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance)));
         } else {
             SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3(
                 SceneManager.targetLookAtForFocus.x,
@@ -373,7 +373,7 @@ function selectObjectByInteraction(objectToSelect, maintainCameraDirection = tru
             );
         }
     } else {
-        SceneManager.targetLookAtForFocus = null; SceneManager.targetCameraPositionForFocus = null;
+        SceneManager.setTargetLookAtForFocus(null); SceneManager.setTargetCameraPositionForFocus(null);
     }
     updateOverallInfoBoxState();
     UIManager.updateHighlightAndGeminiButton();
@@ -397,14 +397,14 @@ function toggleFollow() {
     isFollowing = !isFollowing;
     const focusedObj = SceneManager.getFocusedObject();
     if (isFollowing && focusedObj) {
-        SceneManager.targetLookAtForFocus = focusedObj.getWorldPosition(new window.THREE.Vector3());
+        SceneManager.setTargetLookAtForFocus(focusedObj.getWorldPosition(new window.THREE.Vector3()));
         const objectRadius = Utils.getObjectVisualRadius(focusedObj);
         let offsetDistance = objectRadius * (focusedObj.userData.name === "Sun" ? 2.5 : focusedObj.userData.isShip ? 15 : 4);
         const direction = new window.THREE.Vector3();
         SceneManager.getCamera().getWorldDirection(direction);
-        SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance));
+        SceneManager.setTargetCameraPositionForFocus(new window.THREE.Vector3().copy(SceneManager.targetLookAtForFocus).add(direction.multiplyScalar(-offsetDistance)));
     } else if (!isFollowing) {
-        SceneManager.targetCameraPositionForFocus = null;
+        SceneManager.setTargetCameraPositionForFocus(null);
         // targetLookAtForFocus might still be set if user just clicked, that's fine.
     }
     updateOverallInfoBoxState();
@@ -415,8 +415,8 @@ function toggleFocusAndFollow() {
     if (focusedObj) {
         if (isFollowing) { // If already following, unfollow and stop specific camera positioning
             isFollowing = false;
-            SceneManager.targetCameraPositionForFocus = null;
-            SceneManager.targetLookAtForFocus = null; // Let OrbitControls take over smoothly
+            SceneManager.setTargetCameraPositionForFocus(null);
+            SceneManager.setTargetLookAtForFocus(null); // Let OrbitControls take over smoothly
         } else { // Not following, or following something else: Start following this object
             isFollowing = true;
             const orbitControls = SceneManager.getControls();
@@ -435,8 +435,8 @@ function toggleFocusAndFollow() {
                 camera.getWorldDirection(directionFromObjectToCamera);
                 directionFromObjectToCamera.negate();
             }
-            SceneManager.targetCameraPositionForFocus = new window.THREE.Vector3().addVectors(orbitControls.target, directionFromObjectToCamera.multiplyScalar(followDistance));
-            SceneManager.targetLookAtForFocus = null; // LookAt is handled by controls.target when following
+            SceneManager.setTargetCameraPositionForFocus(new window.THREE.Vector3().addVectors(orbitControls.target, directionFromObjectToCamera.multiplyScalar(followDistance)));
+            SceneManager.setTargetLookAtForFocus(null); // LookAt is handled by controls.target when following
         }
         updateOverallInfoBoxState();
     }
