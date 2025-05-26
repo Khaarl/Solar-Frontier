@@ -3,7 +3,7 @@
 
 // THREE will be accessed as a global variable from the CDN script.
 import { stationsData as configStationsData, DISTANCE_SCALE_AU_TO_THREEJS } from './config.js';
-import { addObjectToScene, getStations as getGlobalStationsArray, getPlanets, getSun } from './sceneManager.js'; // Assuming sceneManager exposes these
+import { addObjectToScene, getStations as getGlobalStationsArray, planets, sun } from './sceneManager.js'; // Assuming sceneManager exposes these
 
 // Individual station geometry creation functions
 function createCoriolisStation(data) {
@@ -202,8 +202,8 @@ function createSkeletalFrameStation(data) {
 // Main function to create all stations
 export function createStations() {
     const stationsArray = getGlobalStationsArray(); // from sceneManager
-    const planetsArray = getPlanets(); // from sceneManager
-    const sunMesh = getSun(); // from sceneManager
+    const planetsArray = planets; // from sceneManager
+    const sunMesh = sun; // from sceneManager
     const stationsDefinition = configStationsData; // from config.js
 
     if (!stationsArray || !planetsArray || !sunMesh) {
