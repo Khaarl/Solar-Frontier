@@ -9,96 +9,117 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    <div id="infoBox">
-        Loading Solar System...
-    </div>
-    <div id="controlsInfo">
-        Press F1 for Controls.
-    </div>
-    <div id="simulationControls">
-        <button id="pauseButton">Pause</button>
-        <label for="speedSlider">Speed: <span id="speedDisplay">1.00</span>x</label>
-        <input type="range" id="speedSlider" min="0" max="2" step="0.01" value="0.1">
-
-        <button id="geminiPlanetInfoButton" class="gemini-button" style="display: none;">✨ Tell Me About...</button>
-        <button id="fullscreenButton">Toggle Fullscreen</button>
+    <div id="mainMenu">
+        <h1>Solar Frontier</h1>
+        <button id="newGameButton">New Game</button>
+        <button id="hangarButton">Hangar</button>
+        <button id="settingsButton">Settings</button>
     </div>
 
-    <div id="objectSelectionMenu">
-        <h3>Select Object</h3>
-        <ul id="objectList">
-            </ul>
-    </div>
-
-    <div id="geminiInfoModal" class="modal">
+    <div id="hangarScreen" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <span class="close-button" id="closeModalButton">&times;</span>
-                <h2 id="modalTitle">Information</h2>
+                <span class="close-button" id="closeHangarButton">&times;</span>
+                <h2>Hangar - Browse Ships</h2>
             </div>
-            <div class="modal-body" id="modalBodyContent">
-                <p class="loading-indicator">Fetching information...</p>
-            </div>
+            <div class="modal-body" id="hangarBody">
+                <p>Ship models will be displayed here.</p>
+                </div>
         </div>
     </div>
 
-    <div id="marketModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 850px;">
-            <div class="modal-header">
-                <span class="close-button" id="closeMarketModalButton">&times;</span>
-                <h2 id="marketModalTitle">Station Market: [Station Name]</h2>
-            </div>
-            <div class="modal-body" id="marketModalBody" style="max-height: 80vh; overflow-y: auto;">
-                <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-                    <div id="marketCommodities" style="width: 100%; min-width: 480px; margin-bottom:15px;">
-                        <h3>Commodities</h3>
-                        <table id="commoditiesTable" style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th>Item</th><th>Stock</th><th>Station Sells (You Buy)</th><th>Station Buys (You Sell)</th><th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="commoditiesTableBody"></tbody>
-                        </table>
-                    </div>
-                    <div id="marketPlayerInfo" style="width: 100%; max-width: 300px; padding-left: 10px; border-left: 1px solid #444; min-width:250px;">
-                        <h3>Player Status</h3>
-                        <p>Credits: <span id="playerCredits">1000</span>cr</p>
-                        <p>Cargo: <span id="playerCargoCurrent">0</span>/<span id="playerCargoMax">20</span> units</p>
-                        <ul id="playerCargoList" style="font-size:0.9em; list-style:none; padding:0; max-height: 150px; overflow-y:auto; margin-bottom:10px;"></ul>
-                        <h3>Passengers Aboard</h3>
-                        <p>Berths: <span id="playerPassengersCurrent">0</span>/<span id="playerPassengersMax">4</span></p>
-                        <ul id="playerPassengerList" style="font-size:0.9em; list-style:none; padding:0; max-height: 100px; overflow-y:auto;"></ul>
-                    </div>
+    <div id="gameUI" style="display: none;">
+        <div id="infoBox">
+            Loading Solar System...
+        </div>
+        <div id="controlsInfo">
+            Press F1 for Controls.
+        </div>
+        <div id="simulationControls">
+            <button id="pauseButton">Pause</button>
+            <label for="speedSlider">Speed: <span id="speedDisplay">1.00</span>x</label>
+            <input type="range" id="speedSlider" min="0" max="2" step="0.01" value="0.1">
+
+            <button id="geminiPlanetInfoButton" class="gemini-button" style="display: none;">✨ Tell Me About...</button>
+            <button id="fullscreenButton">Toggle Fullscreen</button>
+        </div>
+
+        <div id="objectSelectionMenu">
+            <h3>Select Object</h3>
+            <ul id="objectList">
+            </ul>
+        </div>
+
+        <div id="geminiInfoModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close-button" id="closeModalButton">&times;</span>
+                    <h2 id="modalTitle">Information</h2>
                 </div>
-                 <div id="marketPassengers" style="margin-top: 20px;">
-                    <h3>Passenger Terminal - Available Missions</h3>
-                    <table id="passengersTable" style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr><th>Destination</th><th>Count</th><th>Fare (per person)</th><th>Total Fare</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="passengersTableBody"></tbody>
-                    </table>
+                <div class="modal-body" id="modalBodyContent">
+                    <p class="loading-indicator">Fetching information...</p>
                 </div>
             </div>
         </div>
-    </div>
-    <div id="shipOverviewModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 900px;">
-            <div class="modal-header">
-                <span class="close-button" id="closeShipOverviewModalButton">&times;</span>
-                <h2 id="shipOverviewModalTitle">Active Ships Overview</h2>
+
+        <div id="marketModal" class="modal">
+            <div class="modal-content" style="width: 90%; max-width: 850px;">
+                <div class="modal-header">
+                    <span class="close-button" id="closeMarketModalButton">&times;</span>
+                    <h2 id="marketModalTitle">Station Market: [Station Name]</h2>
+                </div>
+                <div class="modal-body" id="marketModalBody" style="max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                        <div id="marketCommodities" style="width: 100%; min-width: 480px; margin-bottom:15px;">
+                            <h3>Commodities</h3>
+                            <table id="commoditiesTable" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th><th>Stock</th><th>Station Sells (You Buy)</th><th>Station Buys (You Sell)</th><th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commoditiesTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="marketPlayerInfo" style="width: 100%; max-width: 300px; padding-left: 10px; border-left: 1px solid #444; min-width:250px;">
+                            <h3>Player Status</h3>
+                            <p>Credits: <span id="playerCredits">1000</span>cr</p>
+                            <p>Cargo: <span id="playerCargoCurrent">0</span>/<span id="playerCargoMax">20</span> units</p>
+                            <ul id="playerCargoList" style="font-size:0.9em; list-style:none; padding:0; max-height: 150px; overflow-y:auto; margin-bottom:10px;"></ul>
+                            <h3>Passengers Aboard</h3>
+                            <p>Berths: <span id="playerPassengersCurrent">0</span>/<span id="playerPassengersMax">4</span></p>
+                            <ul id="playerPassengerList" style="font-size:0.9em; list-style:none; padding:0; max-height: 100px; overflow-y:auto;"></ul>
+                        </div>
+                    </div>
+                     <div id="marketPassengers" style="margin-top: 20px;">
+                        <h3>Passenger Terminal - Available Missions</h3>
+                        <table id="passengersTable" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr><th>Destination</th><th>Count</th><th>Fare (per person)</th><th>Total Fare</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="passengersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body" id="shipOverviewModalBody" style="max-height: 80vh; overflow-y: auto;">
-                <table id="shipOverviewTable" style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th>ID</th><th>Type</th><th>Origin</th><th>Destination</th><th>Progress</th><th>Status</th><th>ETA (sim sec)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="shipOverviewTableBody">
+        </div>
+        <div id="shipOverviewModal" class="modal">
+            <div class="modal-content" style="width: 90%; max-width: 900px;">
+                <div class="modal-header">
+                    <span class="close-button" id="closeShipOverviewModalButton">&times;</span>
+                    <h2 id="shipOverviewModalTitle">Active Ships Overview</h2>
+                </div>
+                <div class="modal-body" id="shipOverviewModalBody" style="max-height: 80vh; overflow-y: auto;">
+                    <table id="shipOverviewTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Type</th><th>Origin</th><th>Destination</th><th>Progress</th><th>Status</th><th>ETA (sim sec)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shipOverviewTableBody">
                         </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

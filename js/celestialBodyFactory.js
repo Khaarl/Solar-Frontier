@@ -3,7 +3,7 @@
 
 // THREE will be accessed as a global variable from the CDN script.
 import { sunData as configSunData, planetsData as configPlanetsData, asteroidBeltsData as configAsteroidBeltsData, cometsData as configCometsData, DISTANCE_SCALE_AU_TO_THREEJS } from './config.js';
-import { addObjectToScene, addOrbitLine, addSunLight, getScene, getOrbitLineMeshes, getOrbitLinesVisible, getPlanets, getComets, getAsteroidBelts } from './sceneManager.js'; // Assuming sceneManager exposes these
+import { addObjectToScene, addOrbitLine, addSunLight, getScene,  getPlanets, comets, asteroidBelts } from './sceneManager.js'; // Assuming sceneManager exposes these
 
 export function createSun() {
     const scene = getScene();
@@ -134,7 +134,7 @@ export function createPlanetsAndMoons() {
 }
 
 export function createAsteroidBelts() {
-    const asteroidBeltsArray = getAsteroidBelts(); // from sceneManager
+    const asteroidBeltsArray = asteroidBelts; // from sceneManager - Changed from getAsteroidBelts()
     const asteroidBeltsDefinition = configAsteroidBeltsData; // from config.js
 
     asteroidBeltsDefinition.forEach(beltData => {
@@ -177,7 +177,7 @@ export function createAsteroidBelts() {
 }
 
 export function createComets() {
-    const cometsArray = getComets(); // from sceneManager
+    const cometsArray = comets; // from sceneManager - Changed from getComets()
     const cometsDefinition = configCometsData; // from config.js
 
     cometsDefinition.forEach(cData => {

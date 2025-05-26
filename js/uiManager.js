@@ -17,6 +17,11 @@ export let playerPassengersCurrentSpan, playerPassengersMaxSpan, playerPassenger
 export let shipOverviewModal, closeShipOverviewModalButton, shipOverviewModalTitle, shipOverviewModalBody, shipOverviewTableBody;
 export let infoBox, controlsInfo;
 
+// New Main Menu and Hangar UI Elements
+export let mainMenuElement, newGameButton, hangarButton, settingsButton;
+export let hangarScreenElement, closeHangarButton, hangarBody;
+export let gameUIElement;
+
 // State variables that might be managed or influenced by UI
 let currentMarketStation = null; // Used by market modal
 let currentSelectableObjectIndex = 0; // Used by object selection cycling
@@ -30,7 +35,8 @@ export function initUI(
     _selectObjectByInteractionCallback,
     _selectNextOrPreviousObjectCallback,
     _openMarketModalCallback, // This will be the local openMarketModal
-    _openShipOverviewModalCallback // This will be the local openShipOverviewModal
+    _openShipOverviewModalCallback, // This will be the local openShipOverviewModal
+    _startNewGameCallback // Callback from main.js to start the game
 ) {
     infoBox = document.getElementById('infoBox');
     controlsInfo = document.getElementById('controlsInfo');
@@ -68,6 +74,16 @@ export function initUI(
     shipOverviewModalBody = document.getElementById('shipOverviewModalBody');
     shipOverviewTableBody = document.getElementById('shipOverviewTableBody');
 
+    // Main Menu and Hangar elements
+    mainMenuElement = document.getElementById('mainMenu');
+    newGameButton = document.getElementById('newGameButton');
+    hangarButton = document.getElementById('hangarButton');
+    settingsButton = document.getElementById('settingsButton');
+    hangarScreenElement = document.getElementById('hangarScreen');
+    closeHangarButton = document.getElementById('closeHangarButton');
+    hangarBody = document.getElementById('hangarBody');
+    gameUIElement = document.getElementById('gameUI');
+
     // Event Listeners
     if (pauseButton) pauseButton.addEventListener('click', _togglePauseCallback);
     if (speedSlider) {
@@ -90,14 +106,55 @@ export function initUI(
         if (shipOverviewModal) shipOverviewModal.style.display = "none";
     });
 
+    // Main Menu and Hangar Event Listeners
+    if (newGameButton) newGameButton.addEventListener('click', () => {
+        showGameUI();
+        _startNewGameCallback(); // Notify main.js to start the game simulation
+    });
+    if (hangarButton) hangarButton.addEventListener('click', showHangarScreen);
+    if (settingsButton) settingsButton.addEventListener('click', () => {
+        // Placeholder for settings - can open a modal or new screen
+        openInfoModal('settings_placeholder');
+    });
+    if (closeHangarButton) closeHangarButton.addEventListener('click', hideHangarScreen);
+
     window.addEventListener('click', (event) => {
         if (geminiInfoModal && event.target == geminiInfoModal) geminiInfoModal.style.display = "none";
         if (marketModal && event.target == marketModal) { marketModal.style.display = "none"; currentMarketStation = null; }
         if (shipOverviewModal && event.target == shipOverviewModal) shipOverviewModal.style.display = "none";
+        if (hangarScreenElement && event.target == hangarScreenElement) hideHangarScreen();
     });
     
     if (controlsInfo) controlsInfo.textContent = "F1: Controls, F4: Ships, R: Market";
-    console.log("UI Initialized");
+    
+    // Initially show main menu and hide game UI
+    showMainMenu();
+    console.log("UI Initialized with Main Menu");
+}
+
+export function showMainMenu() {
+    if (mainMenuElement) mainMenuElement.style.display = 'block'; // Or 'flex' if using flexbox for centering
+    if (gameUIElement) gameUIElement.style.display = 'none';
+    if (hangarScreenElement) hangarScreenElement.style.display = 'none';
+}
+
+export function showGameUI() {
+    if (mainMenuElement) mainMenuElement.style.display = 'none';
+    if (gameUIElement) gameUIElement.style.display = 'block'; // Or 'flex'
+    if (hangarScreenElement) hangarScreenElement.style.display = 'none';
+}
+
+export function showHangarScreen() {
+    if (hangarScreenElement) hangarScreenElement.style.display = 'flex'; // Modals are often flex for centering
+    // Potentially hide other modals if they are open
+    if (geminiInfoModal && geminiInfoModal.style.display !== 'none') geminiInfoModal.style.display = 'none';
+    if (marketModal && marketModal.style.display !== 'none') marketModal.style.display = 'none';
+    // Populate hangarBody with ship models - for now, it's a placeholder
+    if (hangarBody) hangarBody.innerHTML = "<p>Ship models will be displayed here. (Functionality to browse ships to be implemented)</p>";
+}
+
+export function hideHangarScreen() {
+    if (hangarScreenElement) hangarScreenElement.style.display = 'none';
 }
 
 export function updateInfoBoxContent(text) {
@@ -298,6 +355,10 @@ export async function openInfoModal(type) {
     } else if (type === 'no_station_market') {
         modalTitle.textContent = "Market Unavailable";
         modalBodyContent.innerHTML = "<p>You must be focused on a station to view its market. Use mouse click or '[' and ']' to select a station, then press F3 or R.</p>";
+        geminiInfoModal.style.display = "flex";
+    } else if (type === 'settings_placeholder') {
+        modalTitle.textContent = "Settings";
+        modalBodyContent.innerHTML = "<p>Settings screen is not yet implemented. This is a placeholder.</p>";
         geminiInfoModal.style.display = "flex";
     }
 }

@@ -218,3 +218,56 @@ canvas { display: block; }
     border: 1px solid #444; padding: 6px; text-align: left; font-size: 0.9em;
 }
 #shipOverviewTable th { background-color: #333a44; }
+
+/* Main Menu Styles */
+#mainMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* Dark overlay */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200; /* Ensure it's on top */
+    color: #fff;
+    text-align: center;
+}
+
+#mainMenu h1 {
+    font-size: 3em;
+    margin-bottom: 40px;
+    color: #61dafb; /* Light blue, similar to modal accents */
+    text-shadow: 2px 2px 4px #000;
+}
+
+#mainMenu button {
+    background-color: #444;
+    color: white;
+    border: 1px solid #666;
+    padding: 15px 30px;
+    margin: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    min-width: 200px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#mainMenu button:hover {
+    background-color: #555;
+    transform: scale(1.05);
+}
+
+/* Hangar Screen (Modal) Styles */
+#hangarScreen .modal-content {
+    width: 90%;
+    max-width: 700px; /* Slightly wider for potential ship previews */
+}
+
+#hangarBody {
+    text-align: center;
+    min-height: 200px; /* Placeholder for ship content */
+}

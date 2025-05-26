@@ -1,7 +1,7 @@
 // js/controls.js
 // Manages keyboard and mouse event handlers.
 
-import * as THREE from 'three'; // Assuming THREE is global via CDN
+// THREE is globally available via CDN script in HTML.
 import { getScene, getCamera, getRaycaster, getMouse, getClickableObjects, getFocusedObject, setFocusedObject, getOrderedSelectableObjects, getControls as getOrbitControls } from './sceneManager.js';
 // Callbacks to main logic / other managers will be needed
 // e.g., for selectObjectByInteraction, openInfoModal, etc.

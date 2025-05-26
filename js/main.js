@@ -30,12 +30,12 @@ function init() {
 
     // 2. Initialize UI Manager
     UIManager.initUI({
-        togglePause: togglePause,
+        togglePauseCallback: togglePause,
         simulationSpeedUpdateCallback: updateSimulationSpeed,
-        openInfoModal: UIManager.openInfoModal, // UI Manager handles its own modal display
-        toggleBrowserFullscreen: toggleBrowserFullscreen,
-        // Callbacks for actions that UI elements might trigger but are managed by main.js
-        // These will be passed to Controls.initControls where the actual event listeners are
+        openInfoModalCallback: UIManager.openInfoModal, // UI Manager handles its own modal display
+        toggleBrowserFullscreenCallback: toggleBrowserFullscreen,
+        selectObjectByInteractionCallback: selectObjectByInteraction, // For UIManager's object list
+        startNewGameCallback: startNewGame // Callback for "New Game" button
     });
     UIManager.updateSpeedDisplay(simulationSpeed);
 
@@ -100,7 +100,9 @@ function init() {
     }
     
     console.log("Solar Frontier Initialization Complete.");
-    animate(); // Start the animation loop
+    // The game simulation starts here, main menu will be an overlay.
+    // UIManager.showMainMenu() is called at the end of its initUI.
+    animate(); 
 }
 
 // --- Main Animation Loop ---
@@ -142,10 +144,37 @@ function animate() {
 
 // --- Helper and Callback Functions for Main Logic ---
 
+function startNewGame() {
+    console.log("startNewGame called from main.js. Ensuring game is active.");
+    // This function is called after UIManager.showGameUI() hides the main menu.
+
+    if (isPaused) {
+        togglePause(); // Unpause the game if it was paused
+    }
+
+    // Reset simulation speed to default (or from config if available)
+    simulationSpeed = Config.INITIAL_SIMULATION_SPEED !== undefined ? Config.INITIAL_SIMULATION_SPEED : 0.1;
+    UIManager.updateSpeedDisplay(simulationSpeed);
+    if (UIManager.speedSlider) { // Ensure slider UI element exists
+        UIManager.speedSlider.value = simulationSpeed;
+    }
+
+    // Ensure an object is focused if nothing is (e.g., first time starting)
+    // init() already handles initial focus. This is more of a safeguard or reset point.
+    const orderedSelectableObjects = SceneManager.getOrderedSelectableObjects();
+    if (orderedSelectableObjects.length > 0 && !SceneManager.getFocusedObject()) {
+        selectObjectByInteraction(orderedSelectableObjects[0]);
+        currentSelectableObjectIndex = 0; // Reset index if re-focusing
+    }
+
+    updateOverallInfoBoxState(); // Update the info box text
+    console.log("Game is now active and configured by startNewGame.");
+}
+
 function updateCelestialBodies(effectiveDeltaTime) {
     const planets = SceneManager.getPlanets();
-    const comets = SceneManager.getComets();
-    const asteroidBelts = SceneManager.getAsteroidBelts(); // This is an array of groups/arrays of asteroids
+    const comets = SceneManager.comets; // Changed from getComets()
+    const asteroidBelts = SceneManager.asteroidBelts; // Changed from getAsteroidBelts()
 
     // Update Planets and Moons (simplified from original, actual orbital mechanics are complex)
     planets.forEach(p => {
@@ -297,7 +326,7 @@ function togglePause() {
 
 function updateSimulationSpeed(newSpeed) {
     simulationSpeed = newSpeed;
-    // UIManager.updateSpeedDisplay is called by its own event listener
+    // UIManager.updateSpeedDisplay is called by its own event listener in uiManager
 }
 
 function toggleBrowserFullscreen() {
