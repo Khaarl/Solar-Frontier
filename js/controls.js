@@ -2,7 +2,7 @@
 // Manages keyboard and mouse event handlers.
 
 // THREE is globally available via CDN script in HTML.
-import { getScene, getCamera, getRaycaster, getMouse, getClickableObjects, getFocusedObject, setFocusedObject, getOrderedSelectableObjects, getControls as getOrbitControls } from './sceneManager.js';
+import { getScene, getCamera, getRaycaster, getMouse, getClickableObjects, getFocusedObject, setFocusedObject, getOrderedSelectableObjects, getControls as getOrbitControls, getRenderer } from './sceneManager.js';
 // Callbacks to main logic / other managers will be needed
 // e.g., for selectObjectByInteraction, openInfoModal, etc.
 
@@ -48,7 +48,7 @@ _showMainMenuCallback = callbacks.showMainMenu;
     _toggleOrbitLinesCallback = callbacks.toggleOrbitLines;
 
 
-    const renderer = getScene()?.renderer; // Or getRenderer() from sceneManager
+    const renderer = getRenderer(); // Or getRenderer() from sceneManager
     if (renderer && renderer.domElement) {
         renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
     } else {

@@ -207,6 +207,9 @@ export function setTargetCameraPositionForFocus(pos) {
 export function setTargetLookAtForFocus(target) {
     targetLookAtForFocus = target;
 }
+export function setSunObject(sunMesh) {
+    sun = sunMesh;
+}
 export function getHighlightMesh() { return highlightMesh; }
 export function getClickableObjects() { return clickableObjects; }
 export function getOrderedSelectableObjects() { return orderedSelectableObjects; }

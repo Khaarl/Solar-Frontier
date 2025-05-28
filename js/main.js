@@ -275,7 +275,7 @@ function updateCelestialBodies(effectiveDeltaTime) {
         comet.mesh.position.copy(finalPos);
 
         if (Math.floor(frameCount) % Config.COMET_TRAIL_UPDATE_INTERVAL === 0) {
-            const sunPosition = SceneManager.getSun().position; // Assuming getSun() returns the sun mesh
+            const sunPosition = SceneManager.sun.position; // Assuming getSun() returns the sun mesh
             const distanceToSunAU = comet.mesh.position.distanceTo(sunPosition) / Config.DISTANCE_SCALE_AU_TO_THREEJS;
             if (distanceToSunAU < Config.COMET_TRAIL_PROXIMITY_AU) {
                 comet.trailPoints.push(comet.mesh.position.clone());
